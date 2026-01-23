@@ -95,7 +95,7 @@ export default function ServiceSubServicesPage() {
                     title={subService.name}
                     subtitle={subService.subtitle || ""}
                     description={subService.description || ""}
-                    imageSrc={subService.imageSrc}
+                    imageSrc={subService.image || ""}
                     imageAlt={subService.name}
                     href={subService.route}
                   />
