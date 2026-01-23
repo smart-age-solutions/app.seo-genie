@@ -10,15 +10,12 @@
 
 export enum UserRole {
   ADMIN = "ADMIN",
-  MANAGER = "MANAGER",
-  SELLER = "SELLER",
+  USER = "USER",
 }
 
 export enum UserStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
-  BLOCKED = "BLOCKED",
-  REJECTED = "REJECTED",
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
 }
 
 export enum PromptType {
@@ -58,17 +55,12 @@ export interface User {
   id: string;
   name: string | null;
   email: string | null;
-  emailVerified: Date | null;
   image: string | null;
   password: string | null;
   role: UserRole;
   status: UserStatus;
   createdAt: Date;
   updatedAt: Date;
-  lastLoginAt: Date | null;
-  loginCount: number;
-  approvedById: string | null;
-  approvedAt: Date | null;
 }
 
 export interface OrganizationSettings {

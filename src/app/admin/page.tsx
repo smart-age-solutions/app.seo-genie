@@ -7,7 +7,7 @@ import { UserRole, UserStatus } from "@/types/database";
 interface Stats {
   totalUsers: number;
   activeUsers: number;
-  blockedUsers: number;
+  inactiveUsers: number;
 }
 
 export default function AdminDashboard() {
@@ -28,16 +28,16 @@ export default function AdminDashboard() {
 
         setStats({
           totalUsers: users.length,
-          activeUsers: users.filter((u: { status: UserStatus }) => u.status === UserStatus.APPROVED).length,
-          blockedUsers: users.filter((u: { status: UserStatus }) => u.status === UserStatus.BLOCKED).length,
+          activeUsers: users.filter((u: { status: UserStatus }) => u.status === UserStatus.ACTIVE).length,
+          inactiveUsers: users.filter((u: { status: UserStatus }) => u.status === UserStatus.INACTIVE).length,
         });
       } else {
         console.error("Failed to fetch users:", response.status);
-        setStats({ totalUsers: 0, activeUsers: 0, blockedUsers: 0 });
+        setStats({ totalUsers: 0, activeUsers: 0, inactiveUsers: 0 });
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
-      setStats({ totalUsers: 0, activeUsers: 0, blockedUsers: 0 });
+      setStats({ totalUsers: 0, activeUsers: 0, inactiveUsers: 0 });
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
         />
         <StatsCard
           title="Blocked"
-          value={stats?.blockedUsers ?? "-"}
+          value={stats?.inactiveUsers ?? "-"}
           icon="🚫"
           color="bg-red-500"
           isLoading={isLoading}

@@ -42,8 +42,6 @@ export default function HomePage() {
         ? service.images
         : service.image
         ? [service.image]
-        : service.icon
-        ? [service.icon]
         : [];
 
       return {

@@ -14,8 +14,6 @@ interface User {
   role: UserRole;
   status: UserStatus;
   createdAt: string;
-  lastLoginAt: string | null;
-  loginCount: number;
 }
 
 export default function UsersPage() {
@@ -86,10 +84,8 @@ export default function UsersPage() {
 
   const getStatusBadge = (status: UserStatus) => {
     const styles = {
-      [UserStatus.APPROVED]: "bg-green-500",
-      [UserStatus.PENDING]: "bg-yellow-500",
-      [UserStatus.BLOCKED]: "bg-red-500",
-      [UserStatus.REJECTED]: "bg-gray-500",
+      [UserStatus.ACTIVE]: "bg-green-500",
+      [UserStatus.INACTIVE]: "bg-red-500",
     };
     return styles[status] || "bg-gray-500";
   };
@@ -97,8 +93,7 @@ export default function UsersPage() {
   const getRoleBadge = (role: UserRole) => {
     const styles = {
       [UserRole.ADMIN]: "bg-red-500",
-      [UserRole.MANAGER]: "bg-blue-500",
-      [UserRole.SELLER]: "bg-gray-500",
+      [UserRole.USER]: "bg-blue-500",
     };
     return styles[role] || "bg-gray-500";
   };
@@ -130,10 +125,8 @@ export default function UsersPage() {
             onChange={(e) => setFilter({ ...filter, status: e.target.value as UserStatus || undefined })}
           >
             <option value="">All statuses</option>
-            <option value={UserStatus.APPROVED}>Approved</option>
-            <option value={UserStatus.PENDING}>Pending</option>
-            <option value={UserStatus.BLOCKED}>Blocked</option>
-            <option value={UserStatus.REJECTED}>Rejected</option>
+            <option value={UserStatus.ACTIVE}>Active</option>
+            <option value={UserStatus.INACTIVE}>Inactive</option>
           </select>
           <select
             className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-teal"
@@ -142,8 +135,7 @@ export default function UsersPage() {
           >
             <option value="">All roles</option>
             <option value={UserRole.ADMIN}>Admin</option>
-            <option value={UserRole.MANAGER}>Manager</option>
-            <option value={UserRole.SELLER}>Seller</option>
+            <option value={UserRole.USER}>User</option>
           </select>
         </div>
       </div>
@@ -162,7 +154,6 @@ export default function UsersPage() {
                 <th className="text-left px-6 py-4 text-white/70 font-medium">User</th>
                 <th className="text-left px-6 py-4 text-white/70 font-medium">Role</th>
                 <th className="text-left px-6 py-4 text-white/70 font-medium">Status</th>
-                <th className="text-left px-6 py-4 text-white/70 font-medium">Last Login</th>
                 <th className="text-right px-6 py-4 text-white/70 font-medium">Actions</th>
               </tr>
             </thead>
@@ -199,11 +190,6 @@ export default function UsersPage() {
                     <span className={`px-2 py-1 text-xs font-bold text-white rounded ${getStatusBadge(user.status)}`}>
                       {user.status}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-white/70 text-sm">
-                    {user.lastLoginAt
-                      ? new Date(user.lastLoginAt).toLocaleDateString("en-US")
-                      : "Never"}
                   </td>
                   <td className="px-6 py-4 text-right">
                     {user.id !== session?.user.id && (
@@ -265,10 +251,8 @@ export default function UsersPage() {
                   value={editingUser.status}
                   onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value as UserStatus })}
                 >
-                  <option value={UserStatus.APPROVED}>Approved</option>
-                  <option value={UserStatus.PENDING}>Pending</option>
-                  <option value={UserStatus.BLOCKED}>Blocked</option>
-                  <option value={UserStatus.REJECTED}>Rejected</option>
+                  <option value={UserStatus.ACTIVE}>Active</option>
+                  <option value={UserStatus.INACTIVE}>Inactive</option>
                 </select>
               </div>
 
@@ -281,8 +265,7 @@ export default function UsersPage() {
                     value={editingUser.role}
                     onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as UserRole })}
                   >
-                    <option value={UserRole.SELLER}>Seller</option>
-                    <option value={UserRole.MANAGER}>Manager</option>
+                    <option value={UserRole.USER}>User</option>
                     <option value={UserRole.ADMIN}>Admin</option>
                   </select>
                 </div>

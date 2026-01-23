@@ -580,7 +580,6 @@ export const backendApi = {
       return result.user;
     },
     
-    // Update user (e.g., lastLoginAt, loginCount) - calls backend directly
     updateUser: async (id: string, data: unknown) => {
       const backendUrl = backendApi.auth._getBackendUrl();
       const url = `${backendUrl}/api/users/${id}`;

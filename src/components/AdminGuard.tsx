@@ -13,7 +13,7 @@ interface AdminGuardProps {
 
 export function AdminGuard({
   children,
-  allowedRoles = [UserRole.ADMIN, UserRole.MANAGER],
+  allowedRoles = [UserRole.ADMIN, UserRole.USER],
 }: AdminGuardProps) {
   const { data: session, status } = useSession();
   const router = useRouter();

@@ -102,12 +102,9 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
             throw new Error("Invalid credentials");
           }
 
-          if (user.status === UserStatus.BLOCKED) {
-            throw new Error("Your account has been blocked. Please contact the administrator.");
+          if (user.status === UserStatus.INACTIVE) {
+            throw new Error("Your account has been inactive. Please contact the administrator.");
           }
-
-          // Note: lastLoginAt and loginCount will be updated in the signIn callback
-          // where we have a session and can make authenticated requests
 
           return {
             id: user.id,
@@ -170,7 +167,7 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
 
             if (existingUser) {
               // Check if user is blocked
-              if (existingUser.status === UserStatus.BLOCKED) {
+              if (existingUser.status === UserStatus.INACTIVE) {
                 return "/login?error=blocked";
               }
 
@@ -190,8 +187,8 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
                 email,
                 name: user.name || email.split("@")[0],
                 image: user.image || null,
-                role: UserRole.SELLER,
-                status: UserStatus.APPROVED,
+                role: UserRole.USER,
+                status: UserStatus.ACTIVE,
                 provider: "google",
                 providerId: account.providerAccountId,
               });
@@ -351,12 +348,12 @@ export function isAdmin(role: UserRole): boolean {
 
 // Helper function to check if user has manager or admin access
 export function isManagerOrAdmin(role: UserRole): boolean {
-  return role === UserRole.ADMIN || role === UserRole.MANAGER;
+  return role === UserRole.ADMIN || role === UserRole.USER;
 }
 
 // Helper function to check if user is approved
 export function isApproved(status: UserStatus): boolean {
-  return status === UserStatus.APPROVED;
+  return status === UserStatus.ACTIVE;
 }
 
 // Function to check if Google OAuth is configured

@@ -14,13 +14,13 @@ export function UserMenu() {
 
   const isAdminOrManager =
     session.user.role === UserRole.ADMIN ||
-    session.user.role === UserRole.MANAGER;
+    session.user.role === UserRole.USER;
 
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
         return "bg-red-500";
-      case UserRole.MANAGER:
+      case UserRole.USER:
         return "bg-blue-500";
       default:
         return "bg-gray-500";

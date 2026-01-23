@@ -27,8 +27,8 @@ interface GoogleSettings {
 
 const AI_PROVIDERS = [
   { value: "openai", label: "OpenAI" },
-  { value: "anthropic", label: "Anthropic" },
-  { value: "google", label: "Google AI" },
+  // { value: "anthropic", label: "Anthropic" },
+  // { value: "google", label: "Google AI" },
 ];
 
 const AI_MODELS = {
@@ -39,15 +39,15 @@ const AI_MODELS = {
     { value: "gpt-4o-mini", label: "GPT-4o Mini" },
     { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
   ],
-  anthropic: [
-    { value: "claude-3-opus", label: "Claude 3 Opus" },
-    { value: "claude-3-sonnet", label: "Claude 3 Sonnet" },
-    { value: "claude-3-haiku", label: "Claude 3 Haiku" },
-  ],
-  google: [
-    { value: "gemini-pro", label: "Gemini Pro" },
-    { value: "gemini-ultra", label: "Gemini Ultra" },
-  ],
+  // anthropic: [
+  //   { value: "claude-3-opus", label: "Claude 3 Opus" },
+  //   { value: "claude-3-sonnet", label: "Claude 3 Sonnet" },
+  //   { value: "claude-3-haiku", label: "Claude 3 Haiku" },
+  // ],
+  // google: [
+  //   { value: "gemini-pro", label: "Gemini Pro" },
+  //   { value: "gemini-ultra", label: "Gemini Ultra" },
+  // ],
 };
 
 export default function SettingsPage() {
@@ -91,11 +91,20 @@ export default function SettingsPage() {
       }
 
       if (aiSettingsData) {
-        setAISettings(aiSettingsData);
+        // Map backend fields to frontend interface
+        // Backend may return 'defaultModel' instead of 'aiModel'
+        const mappedSettings = {
+          aiProvider: aiSettingsData.aiProvider || "openai",
+          aiModel: aiSettingsData.aiModel || (aiSettingsData as { defaultModel?: string }).defaultModel || AI_MODELS.openai[0]?.value || "",
+          temperature: aiSettingsData.temperature ?? 0.7,
+          maxTokens: aiSettingsData.maxTokens ?? 4000,
+          apiKey: aiSettingsData.apiKey || null,
+          hasApiKey: aiSettingsData.hasApiKey || false,
+        };
+        setAISettings(mappedSettings);
       }
 
       if (googleSettingsData) {
-        console.log("[Settings] Received Google settings:", googleSettingsData);
         setGoogleSettings(googleSettingsData);
       }
     } catch (error) {
@@ -114,12 +123,22 @@ export default function SettingsPage() {
     setIsSaving(true);
 
     try {
+      // Ensure all required fields have values
       const payload: Record<string, unknown> = {
-        aiProvider: aiSettings.aiProvider,
-        defaultModel: aiSettings.aiModel, // Backend expects defaultModel
-        temperature: aiSettings.temperature,
-        maxTokens: aiSettings.maxTokens,
+        aiProvider: aiSettings.aiProvider || "openai",
+        aiModel: aiSettings.aiModel || AI_MODELS.openai[0]?.value || "gpt-4",
+        temperature: aiSettings.temperature ?? 0.7,
+        maxTokens: aiSettings.maxTokens ?? 4000,
       };
+      
+      if (!payload.aiProvider || !payload.aiModel) {
+        setToast({ 
+          message: "AI Provider and Model are required", 
+          type: "error" 
+        });
+        setIsSaving(false);
+        return;
+      }
 
       if (newApiKey) {
         payload.apiKey = newApiKey;
@@ -164,13 +183,6 @@ export default function SettingsPage() {
       if (newGoogleSearchEngineId !== null) {
         payload.searchEngineId = newGoogleSearchEngineId;
       }
-
-      console.log("[Settings] Saving Google settings payload:", {
-        hasOAuthClientId: payload.oauthClientId !== undefined,
-        hasOAuthClientSecret: payload.oauthClientSecret !== undefined,
-        hasSearchApiKey: payload.searchApiKey !== undefined,
-        hasSearchEngineId: payload.searchEngineId !== undefined,
-      });
 
       if (Object.keys(payload).length === 0) {
         setToast({ message: "No changes to save", type: "error" });
@@ -258,7 +270,7 @@ export default function SettingsPage() {
                   setAISettings({ ...aiSettings!, aiModel: e.target.value })
                 }
               >
-                {AI_MODELS[aiSettings?.aiProvider as keyof typeof AI_MODELS]?.map((model) => (
+                {(AI_MODELS[aiSettings?.aiProvider as keyof typeof AI_MODELS] || AI_MODELS.openai).map((model) => (
                   <option key={model.value} value={model.value}>
                     {model.label}
                   </option>
