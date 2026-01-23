@@ -10,9 +10,7 @@ interface SubService {
   slug: string;
   name: string;
   subtitle: string | null;
-  icon: string | null;
   image: string | null;
-  routePath: string | null;
 }
 
 interface Service {
@@ -63,8 +61,7 @@ export function ServiceNav() {
     setIsOpen(false);
   }, [pathname]);
 
-  const getSubServiceRoute = useCallback((serviceSlug: string, subServiceSlug: string, routePath: string | null) => {
-    if (routePath) return routePath;
+  const getSubServiceRoute = useCallback((serviceSlug: string, subServiceSlug: string) => {
     const serviceRoute = serviceSlug.replace(/_/g, "-");
     const subServiceRoute = subServiceSlug.replace(/_/g, "-");
     return `/${serviceRoute}/${subServiceRoute}`;
@@ -73,7 +70,7 @@ export function ServiceNav() {
   const getServiceHref = useCallback((service: Service) => {
     if (service.subServices.length === 1) {
       const subService = service.subServices[0];
-      return getSubServiceRoute(service.slug, subService.slug, subService.routePath);
+      return getSubServiceRoute(service.slug, subService.slug);
     } else if (service.subServices.length > 1) {
       // Use consistent slug conversion
       return `/${service.slug.replace(/_/g, "-")}`;
@@ -127,7 +124,7 @@ export function ServiceNav() {
           ) : (
             services.map((service) => {
               // Use consistent slug conversion
-      const serviceRoute = service.slug.replace(/_/g, "-");
+              const serviceRoute = service.slug.replace(/_/g, "-");
               const serviceHref = getServiceHref(service);
               const isActive = pathname === `/${serviceRoute}` || pathname.startsWith(`/${serviceRoute}/`);
 
@@ -150,9 +147,9 @@ export function ServiceNav() {
                   {service.subServices.length > 0 && (
                     <div className="bg-black/20">
                       {service.subServices.map((subService) => {
-                        const subServiceHref = getSubServiceRoute(service.slug, subService.slug, subService.routePath);
-                        const isSubServiceActive = pathname === subServiceHref;
-                        const imageSrc = subService.image || subService.icon;
+                        const subServiceHref = getSubServiceRoute(service.slug, subService.slug);
+                        const isSubServiceActive = pathname === subServiceHref; 
+                        const imageSrc = subService.image;
 
                         return (
                           <Link

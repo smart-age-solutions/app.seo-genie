@@ -5,7 +5,7 @@
  * Do not edit manually - run "npm run sync-types" to update.
  * 
  * Source: backend/prisma/schema.prisma
- * Generated: 2026-01-23T09:55:02.364Z
+ * Generated: 2026-01-23T20:34:29.992Z
  */
 
 export enum UserRole {
@@ -98,8 +98,6 @@ export interface Service {
   slug: string;
   name: string;
   description: string | null;
-  icon: string | null;
-  image: string | null;
   images: string[];
   isActive: boolean;
   sortOrder: number;
@@ -114,9 +112,7 @@ export interface SubService {
   name: string;
   subtitle: string | null;
   description: string | null;
-  icon: string | null;
   image: string | null;
-  routePath: string | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: Date;

@@ -55,8 +55,6 @@ export async function GET() {
             ? imagesArray
             : service.image
             ? [service.image]
-            : service.icon
-            ? [service.icon]
             : [];
           
           const serviceIcon = imageSources.length > 0 ? (imageSources[0] as string) : (service.icon as string | undefined);
@@ -71,9 +69,7 @@ export async function GET() {
               slug: s.slug,
               name: s.name,
               subtitle: s.subtitle,
-              icon: s.icon,
               image: s.image,
-              routePath: s.routePath,
               isActive: s.isActive,
             })),
           };

@@ -62,14 +62,11 @@ export default function ServiceSubServicesPage() {
     if (!serviceSlug) return [];
 
     return subServices.map((subService) => {
-      // Use centralized slug conversion
       const routeSlug = subService.slug.replace(/_/g, "-");
-      const imageSrc = subService.image || subService.icon || "/images/spells/treasure.svg";
 
       return {
         ...subService,
-        route: `/${serviceSlug}/${routeSlug}`,
-        imageSrc,
+        route: `/${serviceSlug}/${routeSlug}`
       };
     });
   }, [subServices, serviceSlug]);

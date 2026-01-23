@@ -109,7 +109,6 @@ export async function PATCH(
       body: JSON.stringify({
         name: body.name,
         description: body.description,
-        icon: body.icon,
         image: body.image,
         isActive: body.isActive,
         sortOrder: body.sortOrder,

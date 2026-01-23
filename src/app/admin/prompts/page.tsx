@@ -271,7 +271,6 @@ export default function PromptsPage() {
                 }
               >
                 <div className="flex items-center gap-4">
-                  <span className="text-3xl">{service.icon || "🧞"}</span>
                   <div>
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-bold text-white">

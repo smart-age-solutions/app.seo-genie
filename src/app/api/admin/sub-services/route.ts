@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { serviceId, slug, name, description, icon, image, routePath, isActive } = body;
+    const { serviceId, slug, name, description, image, isActive } = body;
 
     if (!serviceId || !slug || !name) {
       return NextResponse.json(
@@ -100,9 +100,7 @@ export async function POST(request: NextRequest) {
         slug,
         name,
         description,
-        icon,
         image,
-        routePath,
         isActive: isActive ?? true,
       }),
     });

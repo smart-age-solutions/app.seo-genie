@@ -213,7 +213,7 @@ export default function ServicesAdminPage() {
     }
   };
 
-  const updateSubService = async (data: { id?: string; serviceId: string; slug: string; name: string; subtitle?: string; description?: string; icon?: string; image?: string; routePath?: string }) => {
+  const updateSubService = async (data: { id?: string; serviceId: string; slug: string; name: string; subtitle?: string; description?: string; image?: string }) => {
     if (!data.id) return;
     try {
       const { id, ...updateData } = data;
@@ -736,7 +736,6 @@ function NewServiceModal({
     slug: existingService?.slug || "",
     name: existingService?.name || "",
     description: existingService?.description || "",
-    icon: existingService?.icon || "",
     images: existingService?.images || [],
   });
 
@@ -748,7 +747,6 @@ function NewServiceModal({
         slug: formData.slug,
         name: formData.name,
         description: formData.description || undefined,
-        icon: formData.icon || undefined,
         images: formData.images.length > 0 ? formData.images : undefined,
       });
     }
@@ -841,7 +839,6 @@ function NewSubServiceModal({
     name: existingSubService?.name || "",
     subtitle: existingSubService?.subtitle || "",
     description: existingSubService?.description || "",
-    icon: existingSubService?.icon || "",
     image: existingSubService?.image || "",
   });
 
@@ -855,7 +852,6 @@ function NewSubServiceModal({
         name: formData.name,
         subtitle: formData.subtitle || undefined,
         description: formData.description || undefined,
-        icon: formData.icon || undefined,
         image: formData.image || undefined,
       });
     }
