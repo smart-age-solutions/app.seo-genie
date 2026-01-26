@@ -968,6 +968,7 @@ function NewPromptModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // TO DO: Remove any information about placeholders from the backend and frontend
     // Parse placeholders (comma-separated)
     // const placeholdersArray = formData.placeholders
     //   .split(",")
