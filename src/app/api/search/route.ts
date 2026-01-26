@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getAuthHeader } from "@/lib/session-token";
+import { PromptType } from "@/types/database";
 
 // In development (Docker): use internal network URL (BACKEND_API_URL)
 // In production (Vercel/Fly.io): use public URL (NEXT_PUBLIC_API_URL)
@@ -26,10 +28,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    console.log("Search API: Request received", { subServiceId: body.subServiceId, hasFormData: !!body.formData });
 
     const backendUrl = getBackendUrl();
-    console.log("Search API: Backend URL", backendUrl);
     
     // Ensure URL has protocol
     let backendBaseUrl = backendUrl;
@@ -38,7 +38,40 @@ export async function POST(request: NextRequest) {
     }
     
     const searchUrl = `${backendBaseUrl}/search_stream`;
-    console.log("Search API: Calling backend", searchUrl);
+
+     // Fetch prompts from database to get titles
+     let titles: { resultsTitle: string; intentTitle: string; blueprintTitle: string } | null = null;
+     if (body.subServiceId) {
+       try {
+         const authHeader = await getAuthHeader();
+         if (authHeader) {
+           const promptsResponse = await fetch(`${backendBaseUrl}/api/sub-services/${body.subServiceId}/prompts`, {
+             headers: {
+               "Authorization": authHeader,
+               "Content-Type": "application/json",
+             },
+           });
+ 
+           if (promptsResponse.ok) {
+             const promptsData = await promptsResponse.json();
+             const prompts = promptsData.prompts || promptsData || [];
+             
+             // Find prompts by type and use their names as titles
+             const topResultsPrompt = prompts.find((p: { promptType: string }) => p.promptType === PromptType.TOP_RESULTS);
+             const intentPrompt = prompts.find((p: { promptType: string }) => p.promptType === PromptType.INTENT);
+             const blueprintPrompt = prompts.find((p: { promptType: string }) => p.promptType === PromptType.BLUEPRINT);
+ 
+             titles = {
+               resultsTitle: topResultsPrompt?.name || "Top Results",
+               intentTitle: intentPrompt?.name || "Intent",
+               blueprintTitle: blueprintPrompt?.name || "Blueprint",
+             };
+           }
+         }
+       } catch (error) {
+         console.error("Error fetching prompts for titles:", error);
+       }
+     }
     
     // Forward the request to the backend
     const backendResponse = await fetch(searchUrl, {
@@ -91,6 +124,13 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // Send titles first if available
+          if (titles) {
+            const titlesEvent = `data: ${JSON.stringify({ type: "titles", content: titles })}\n\n`;
+            controller.enqueue(new TextEncoder().encode(titlesEvent));
+          }
+
+          // Then forward the backend stream
           while (true) {
             const { done, value } = await reader.read();
             if (done) {

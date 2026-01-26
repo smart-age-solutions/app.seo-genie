@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header, Footer, Background, FormCard, FormField as FormFieldWrapper, LoadingOverlay, AuthGuard, FormMessage, PageLoading } from "@/components";
-import { TopResult } from "@/lib/api";
+import { TopResult, TitlesBody } from "@/lib/api";
 
 interface DynamicFormField {
   id: string;
@@ -154,8 +154,9 @@ export default function DynamicSubServicePage() {
         }
       });
 
-      const results: { topResults: TopResult[]; intent: string; blueprint: string } = { 
+      const results: { topResults: TopResult[]; titlesBody: TitlesBody | null; intent: string; blueprint: string } = { 
         topResults: [], 
+        titlesBody: null,
         intent: "", 
         blueprint: "" 
       };
@@ -169,6 +170,9 @@ export default function DynamicSubServicePage() {
       }, {
         onTopResults: (topResults) => {
           results.topResults = Array.isArray(topResults) ? topResults : [];
+        },
+        onTitles: (titles: TitlesBody) => {
+          results.titlesBody = titles;
         },
         onIntent: (intentData) => {
           results.intent = intentData.trim();

@@ -20,8 +20,15 @@ export interface TopResult {
   estimated_content_length: string;
 }
 
+export interface TitlesBody {
+  resultsTitle: string;
+  intentTitle: string;
+  blueprintTitle: string;
+}
+
 interface StreamCallbacks {
   onTopResults: (results: TopResult[]) => void;
+  onTitles: (titles: TitlesBody) => void;
   onIntent: (intent: string) => void;
   onBlueprint: (blueprint: string) => void;
   onError: (error: string) => void;
@@ -128,6 +135,10 @@ export async function searchStream(data: SearchData, callbacks: StreamCallbacks)
               if (results.length > 0) {
                 callbacks.onTopResults(results);
               }
+              break;
+            case "titles":
+              // Titles come as a single object, not an array
+              callbacks.onTitles(parsed.content as TitlesBody);
               break;
             case "intent":
               callbacks.onIntent(parsed.content);

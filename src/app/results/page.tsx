@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
-import { SearchData, TopResult } from "@/lib/api";
+import { SearchData, TopResult, TitlesBody } from "@/lib/api";
 import { AuthGuard, Toast } from "@/components";
 import { useTypewriter, useTypewriterHTML } from "@/hooks/useTypewriter";
 
@@ -15,6 +15,7 @@ export default function ResultsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [intentComplete, setIntentComplete] = useState(false);
   const [blueprintReady, setBlueprintReady] = useState(false);
+  const [titlesBody, setTitlesBody] = useState<TitlesBody | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [googleUrl, setGoogleUrl] = useState("");
 
@@ -88,6 +89,7 @@ export default function ResultsPage() {
         topResults: TopResult[];
         intent: string;
         blueprint: string;
+        titlesBody: TitlesBody | null;
       };
       
       // Set all data immediately - no async needed
@@ -96,7 +98,8 @@ export default function ResultsPage() {
       setIntent(results.intent || "");
       setBlueprint(results.blueprint || "");
       setBlueprintReady(!!results.blueprint);
-      
+      setTitlesBody(results.titlesBody || null);
+
       const keyword = data.keyword || data.collection || data.product || "";
       setGoogleUrl(`https://www.google.com/search?q=${encodeURIComponent(`${keyword} ${data.location || ""}`)}`);
       
@@ -134,7 +137,10 @@ export default function ResultsPage() {
               </div>
             </div>
 
-            <h1 className="text-4xl font-black text-gray-900 mb-8">TOP RESULTS</h1>
+            {/* Top Results Title */}
+            <h1 className="text-4xl font-black text-gray-900 mb-8">
+              {titlesBody?.resultsTitle}
+            </h1>
 
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12">
@@ -146,13 +152,15 @@ export default function ResultsPage() {
             ) : (
               <div className="space-y-8">
                 <div dangerouslySetInnerHTML={{ __html: displayedTopResultsHTML }} />
-                {isTypingTopResults && <span className="inline-block w-2 h-5 bg-gray-800 animate-pulse ml-1">|</span>}
+                {isTypingTopResults}
               </div>
             )}
 
             {/* Intent Section */}
             <div className="mt-12">
-              <h2 className="text-4xl font-black text-gray-900 mb-4">INTENT</h2>
+              <h2 className="text-4xl font-black text-gray-900 mb-4">
+                {titlesBody?.intentTitle}
+              </h2>
               {!intent ? (
                 <div className="flex items-center gap-3">
                   <span className="star-spinner text-gray-600 text-2xl">★</span>
@@ -171,7 +179,9 @@ export default function ResultsPage() {
         {/* Right Column - Blueprint */}
         <div className="w-full lg:w-1/2 results-right min-h-screen print:min-h-0">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-4xl font-black text-gray-900 mb-8">BLUEPRINT FOR SUCCESS</h1>
+            <h1 className="text-4xl font-black text-gray-900 mb-8">
+              {titlesBody?.blueprintTitle}
+            </h1>
 
             {!blueprintReady || !intentComplete ? (
               <div className="flex flex-col items-center justify-center py-12">
