@@ -520,7 +520,8 @@ export default function ServicesAdminPage() {
                                     </button>
                                   </div>
                                 </div>
-                                {prompt.placeholders.length > 0 && (
+                                {/* TO DO: Remove any placeholders from the template on frontend and backend */}
+                                {/* {prompt.placeholders.length > 0 && (
                                   <div className="mt-2">
                                     <p className="text-xs text-white/40 mb-1">Available placeholders:</p>
                                     <div className="flex flex-wrap gap-1">
@@ -531,7 +532,7 @@ export default function ServicesAdminPage() {
                                       ))}
                                     </div>
                                   </div>
-                                )}
+                                )} */}
                               </div>
                             ))
                           )}
@@ -686,7 +687,8 @@ export default function ServicesAdminPage() {
                 />
                 <label htmlFor="promptActive" className="text-white">Active</label>
               </div>
-              {editingPrompt.placeholders.length > 0 && (
+              {/* TO DO: Remove any placeholders from the template on frontend and backend */}
+              {/* {editingPrompt.placeholders.length > 0 && (
                 <div>
                   <p className="text-white mb-2">Available placeholders:</p>
                   <div className="flex flex-wrap gap-2">
@@ -697,7 +699,7 @@ export default function ServicesAdminPage() {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
             <div className="p-6 border-t border-white/10 flex justify-end gap-4">
               <button
@@ -967,10 +969,10 @@ function NewPromptModal({
     e.preventDefault();
     
     // Parse placeholders (comma-separated)
-    const placeholdersArray = formData.placeholders
-      .split(",")
-      .map(p => p.trim())
-      .filter(p => p.length > 0);
+    // const placeholdersArray = formData.placeholders
+    //   .split(",")
+    //   .map(p => p.trim())
+    //   .filter(p => p.length > 0);
 
     onSave({
       subServiceId,
@@ -981,7 +983,7 @@ function NewPromptModal({
       // Send dataSource for all types, backend will handle validation
       dataSource: formData.dataSource || (formData.promptType === "TOP_RESULTS" ? "GOOGLE" : undefined),
       template: formData.template,
-      placeholders: placeholdersArray.length > 0 ? placeholdersArray : undefined,
+      // placeholders: placeholdersArray.length > 0 ? placeholdersArray : undefined,
     });
   };
 
@@ -1082,7 +1084,9 @@ function NewPromptModal({
             />
             <p className="text-xs text-white/40 mt-1">Use curly braces for placeholders: {"{keyword}"}, {"{location}"}, etc.</p>
           </div>
-          <div>
+
+          {/* TO DO: Remove any placeholders from the template on frontend and backend */}
+          {/* <div>
             <label className="block text-white mb-2">Placeholders (comma-separated)</label>
             <input
               type="text"
@@ -1092,7 +1096,7 @@ function NewPromptModal({
               placeholder="e.g., keyword, location, store, query, top_ranking_html"
             />
             <p className="text-xs text-white/40 mt-1">List all placeholders used in your template</p>
-          </div>
+          </div> */}
           <div className="flex justify-end gap-4 pt-4">
             <button
               type="button"
