@@ -57,6 +57,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ serviceId: string; promptId: string }> }
 ) {
+
   try {
     const session = await getServerSession(authOptions);
 

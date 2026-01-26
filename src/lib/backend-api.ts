@@ -42,8 +42,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}): Promise<
     const baseUrl =
       process.env.NEXTAUTH_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-      "http://localhost:3000";
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) || "http://localhost:3000";
 
     // Map endpoint to specific route
     let mappedEndpoint = endpoint;
@@ -243,7 +242,6 @@ export const backendApi = {
     },
   },
 
-  // Service Prompts
   prompts: {
     getBySubService: async (subServiceId: string) => {
       const response = await apiRequest(`/sub-services/${subServiceId}/prompts`);
@@ -251,12 +249,14 @@ export const backendApi = {
       const data = await response.json();
       return data.prompts;
     },
+
     getById: async (id: string) => {
       const response = await apiRequest(`/prompts/${id}`);
       if (!response.ok) throw new Error("Failed to fetch prompt");
       const data = await response.json();
       return data.prompt;
     },
+
     create: async (subServiceId: string, data:  unknown) => {
       const response = await apiRequest(`/sub-services/${subServiceId}/prompts`, {
         method: "POST",
@@ -269,6 +269,7 @@ export const backendApi = {
       const result = await response.json();
       return result.prompt;
     },
+
     update: async (id: string, data:  unknown) => {
       const response = await apiRequest(`/prompts/${id}`, {
         method: "PATCH",
@@ -281,6 +282,7 @@ export const backendApi = {
       const result = await response.json();
       return result.prompt;
     },
+    
     delete: async (id: string) => {
       const response = await apiRequest(`/prompts/${id}`, {
         method: "DELETE",
@@ -301,12 +303,14 @@ export const backendApi = {
       const data = await response.json();
       return data.formFields;
     },
+
     getById: async (id: string) => {
       const response = await apiRequest(`/form-fields/${id}`);
       if (!response.ok) throw new Error("Failed to fetch form field");
       const data = await response.json();
       return data.formField;
     },
+
     create: async (subServiceId: string, data:  unknown) => {
       const response = await apiRequest(`/sub-services/${subServiceId}/form-fields`, {
         method: "POST",
@@ -319,6 +323,7 @@ export const backendApi = {
       const result = await response.json();
       return result.formField;
     },
+
     update: async (id: string, data:  unknown) => {
       const response = await apiRequest(`/form-fields/${id}`, {
         method: "PATCH",
@@ -331,6 +336,7 @@ export const backendApi = {
       const result = await response.json();
       return result.formField;
     },
+
     delete: async (id: string) => {
       const response = await apiRequest(`/form-fields/${id}`, {
         method: "DELETE",
@@ -342,6 +348,7 @@ export const backendApi = {
       // 204 No Content means success, no body to parse
       return true;
     },
+
     reorder: async (subServiceId: string, fieldIds: string[]) => {
       const response = await apiRequest(`/sub-services/${subServiceId}/form-fields/reorder`, {
         method: "POST",

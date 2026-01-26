@@ -21,15 +21,13 @@ export enum UserStatus {
 export enum PromptType {
   TOP_RESULTS = "TOP_RESULTS",
   INTENT = "INTENT",
-  BLUEPRINT = "BLUEPRINT",
-  CUSTOM = "CUSTOM",
+  BLUEPRINT = "BLUEPRINT"
 }
 
 export enum DataSource {
   GOOGLE = "GOOGLE",
   CHATGPT = "CHATGPT",
-  GEMINI = "GEMINI",
-  CUSTOM = "CUSTOM",
+  GEMINI = "GEMINI"
 }
 
 export enum FieldType {

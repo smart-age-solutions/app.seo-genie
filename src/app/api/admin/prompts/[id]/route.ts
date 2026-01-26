@@ -99,7 +99,10 @@ export async function POST(request: NextRequest) {
 }
 
 // PATCH /api/admin/prompts - Update a prompt template
-export async function PATCH(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {  
   try {
     const session = await getServerSession(authOptions);
 
@@ -107,8 +110,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
-    const { id, name, description, prompt, isActive } = body;
+    const { template, isActive, dataSource } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -122,17 +126,16 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch(`${BACKEND_URL}/api/prompt-templates/${id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/prompts/${id}`, {
       method: "PATCH",
       headers: {
         "Authorization": authHeader,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name,
-        description,
-        prompt,
+        template,
         isActive,
+        dataSource
       }),
     });
 

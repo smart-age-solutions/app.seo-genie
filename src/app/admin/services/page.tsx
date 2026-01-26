@@ -35,12 +35,12 @@ interface SubService {
 
 interface ServicePrompt {
   id: string;
-  subServiceId?: string; // Added for API calls
+  subServiceId?: string;
   slug: string;
   name: string;
   description: string | null;
   promptType: string;
-  dataSource?: string | null;
+  dataSource: string | null;
   template: string;
   isActive: boolean;
   version: number;
@@ -142,8 +142,7 @@ export default function ServicesAdminPage() {
       await backendApi.prompts.update(editingPrompt.id, {
         template: editingPrompt.template,
         isActive: editingPrompt.isActive,
-        // Send dataSource for all types, backend will handle validation
-        dataSource: editingPrompt.dataSource || (editingPrompt.promptType === "TOP_RESULTS" ? "GOOGLE" : undefined),
+        dataSource: editingPrompt.dataSource,
       });
       setToast({ message: "Prompt updated successfully", type: "success" });
       setEditingPrompt(null);
@@ -266,7 +265,7 @@ export default function ServicesAdminPage() {
     name: string;
     description?: string;
     promptType: string;
-    dataSource?: string;
+    dataSource: string;
     template: string;
     placeholders?: string[];
   }) => {
@@ -652,7 +651,7 @@ export default function ServicesAdminPage() {
                     Data Source {editingPrompt.promptType === "TOP_RESULTS" && "*"}
                   </label>
                   <select
-                    value={editingPrompt.dataSource || "GOOGLE"}
+                    value={editingPrompt.dataSource ?? ""}
                     onChange={(e) => setEditingPrompt({ ...editingPrompt, dataSource: e.target.value })}
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-purple"
                     required={editingPrompt.promptType === "TOP_RESULTS"}
@@ -660,7 +659,6 @@ export default function ServicesAdminPage() {
                     <option value="GOOGLE">Google (Search + Scraping)</option>
                     <option value="CHATGPT">ChatGPT (AI Generated)</option>
                     <option value="GEMINI">Gemini (AI Generated)</option>
-                    <option value="CUSTOM">Custom</option>
                   </select>
                   <p className="text-xs text-white/40 mt-1">
                     {editingPrompt.promptType === "TOP_RESULTS" 
@@ -841,6 +839,8 @@ function NewSubServiceModal({
     description: existingSubService?.description || "",
     image: existingSubService?.image || "",
   });
+
+  console.log(formData);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1027,7 +1027,6 @@ function NewPromptModal({
                 <option value="TOP_RESULTS">TOP_RESULTS</option>
                 <option value="INTENT">INTENT</option>
                 <option value="BLUEPRINT">BLUEPRINT</option>
-                <option value="CUSTOM">CUSTOM</option>
               </select>
             </div>
           </div>
@@ -1044,7 +1043,6 @@ function NewPromptModal({
               <option value="GOOGLE">Google (Search + Scraping)</option>
               <option value="CHATGPT">ChatGPT (AI Generated)</option>
               <option value="GEMINI">Gemini (AI Generated)</option>
-              <option value="CUSTOM">Custom</option>
             </select>
             <p className="text-xs text-white/40 mt-1">
               {formData.promptType === "TOP_RESULTS" 

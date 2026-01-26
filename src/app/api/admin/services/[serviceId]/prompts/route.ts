@@ -92,7 +92,7 @@ export async function POST(
         slug,
         name,
         description,
-        promptType: promptType || PromptType.CUSTOM,
+        promptType: promptType,
         template,
         placeholders: placeholders || [],
         isActive: isActive ?? true,

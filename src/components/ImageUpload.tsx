@@ -82,6 +82,7 @@ export function ImageUpload({
   const handleRemove = async () => {
     if (previewUrl && previewUrl.startsWith('/')) {
       try {
+        // TODO: Fix this
         await fetch("/api/upload", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
