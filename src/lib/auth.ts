@@ -125,6 +125,7 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
 
   // Only add Google provider if credentials are configured
   if (googleCredentials) {
+    console.log("Google OAuth provider configured successfully");
     providers.unshift(
       GoogleProvider({
         clientId: googleCredentials.clientId,
@@ -138,9 +139,17 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
         },
       })
     );
+  } else {
+    console.warn("Google OAuth provider not configured - credentials not found");
   }
 
+  // Get base URL for NextAuth - critical for Vercel deployment
+  const baseUrl = process.env.NEXTAUTH_URL || 
+                  (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+
   return {
+    // Explicitly set the base URL - required for Vercel/serverless environments
+    url: baseUrl,
     // No adapter - using JWT strategy only
     providers,
     callbacks: {
