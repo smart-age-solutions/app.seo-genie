@@ -24,10 +24,11 @@ export interface TitlesBody {
   resultsTitle: string;
   intentTitle: string;
   blueprintTitle: string;
+  topResultsDataSource?: string | null;
 }
 
 interface StreamCallbacks {
-  onTopResults: (results: TopResult[]) => void;
+  onTopResults: (results: TopResult[] | string) => void;
   onTitles: (titles: TitlesBody) => void;
   onIntent: (intent: string) => void;
   onBlueprint: (blueprint: string) => void;
@@ -127,14 +128,11 @@ export async function searchStream(data: SearchData, callbacks: StreamCallbacks)
         
         try {
           const parsed = JSON.parse(part.slice(6));
-          
+
           switch (parsed.type) {
             case "top_results":
-              // Backend sends array of TopResult directly
-              const results = Array.isArray(parsed.content) ? parsed.content : [];
-              if (results.length > 0) {
-                callbacks.onTopResults(results);
-              }
+              // Backend sends array of TopResult[] for Google datasource, or HTML string for AI datasources
+              callbacks.onTopResults(parsed.content);
               break;
             case "titles":
               // Titles come as a single object, not an array

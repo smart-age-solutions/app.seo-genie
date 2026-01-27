@@ -154,8 +154,9 @@ export default function DynamicSubServicePage() {
         }
       });
 
-      const results: { topResults: TopResult[]; titlesBody: TitlesBody | null; intent: string; blueprint: string } = { 
+      const results: { topResults: TopResult[] | string; topResultsType: "array" | "html"; titlesBody: TitlesBody | null; intent: string; blueprint: string } = { 
         topResults: [], 
+        topResultsType: "array",
         titlesBody: null,
         intent: "", 
         blueprint: "" 
@@ -169,17 +170,33 @@ export default function DynamicSubServicePage() {
         spellType: dataToStore.spellType as "high-authority" | "collection" | "product" | "geo-collection" | "geo-product"
       }, {
         onTopResults: (topResults) => {
-          results.topResults = Array.isArray(topResults) ? topResults : [];
+          // Check if it's an array (Google datasource) or string (AI datasource)
+          if (Array.isArray(topResults)) {
+            // Array type: store as-is, will be mapped in results page
+            results.topResults = topResults;
+            results.topResultsType = "array";
+          } else if (typeof topResults === "string") {
+            // HTML string type: respect the HTML as it comes from API, only remove markdown code blocks if present
+            const cleaned = topResults.replace(/```html|```/gi, "").trim();
+            results.topResults = cleaned;
+            results.topResultsType = "html";
+          } else {
+            results.topResults = [];
+            results.topResultsType = "array";
+          }
         },
         onTitles: (titles: TitlesBody) => {
           results.titlesBody = titles;
         },
         onIntent: (intentData) => {
-          results.intent = intentData.trim();
+          // Respect the HTML as it comes from API, only remove markdown code blocks if present
+          const cleaned = intentData.replace(/```html|```/gi, "").trim();
+          results.intent = cleaned;
         },
         onBlueprint: (blueprintData) => {
+          // Respect the HTML as it comes from API, only remove markdown code blocks if present
           const cleaned = blueprintData.replace(/```html|```/gi, "").trim();
-          results.blueprint = cleaned.startsWith("<") ? cleaned : `<div>${cleaned}</div>`;
+          results.blueprint = cleaned;
         },
         onError: (err) => {
           setFormError(err);
@@ -187,6 +204,7 @@ export default function DynamicSubServicePage() {
         },
       });
 
+      console.log("[Form] Saving to localStorage - titlesBody:", results.titlesBody);
       localStorage.setItem("seoai_search_data", JSON.stringify(dataToStore));
       localStorage.setItem("seoai_search_results", JSON.stringify(results));
       

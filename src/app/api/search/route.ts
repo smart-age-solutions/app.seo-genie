@@ -38,9 +38,8 @@ export async function POST(request: NextRequest) {
     }
     
     const searchUrl = `${backendBaseUrl}/search_stream`;
-
-     // Fetch prompts from database to get titles
-     let titles: { resultsTitle: string; intentTitle: string; blueprintTitle: string } | null = null;
+     // Fetch prompts from database to get titles and datasource
+     let titles: { resultsTitle: string; intentTitle: string; blueprintTitle: string; topResultsDataSource?: string } | null = null;
      if (body.subServiceId) {
        try {
          const authHeader = await getAuthHeader();
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
                "Content-Type": "application/json",
              },
            });
- 
+
            if (promptsResponse.ok) {
              const promptsData = await promptsResponse.json();
              const prompts = promptsData.prompts || promptsData || [];
@@ -60,11 +59,12 @@ export async function POST(request: NextRequest) {
              const topResultsPrompt = prompts.find((p: { promptType: string }) => p.promptType === PromptType.TOP_RESULTS);
              const intentPrompt = prompts.find((p: { promptType: string }) => p.promptType === PromptType.INTENT);
              const blueprintPrompt = prompts.find((p: { promptType: string }) => p.promptType === PromptType.BLUEPRINT);
- 
+
              titles = {
                resultsTitle: topResultsPrompt?.name || "Top Results",
                intentTitle: intentPrompt?.name || "Intent",
                blueprintTitle: blueprintPrompt?.name || "Blueprint",
+               topResultsDataSource: topResultsPrompt?.dataSource || null,
              };
            }
          }

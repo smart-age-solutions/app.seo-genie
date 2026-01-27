@@ -7,42 +7,44 @@ const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_U
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/admin/prompts - List all prompt templates
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
+// TO DO: CHECK IF I NEED TO DELETE THE PROMPT FROM THE SUB-SERVICE
+// // GET /api/admin/prompts - List all prompt templates
+// export async function GET() {
+//   try {
+//     const session = await getServerSession(authOptions);
 
-    if (!session?.user || !isManagerOrAdmin(session.user.role)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+//     if (!session?.user || !isManagerOrAdmin(session.user.role)) {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//     }
 
-    const authHeader = await getAuthHeader();
-    if (!authHeader) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+//     const authHeader = await getAuthHeader();
+//     if (!authHeader) {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//     }
 
-    const response = await fetch(`${BACKEND_URL}/api/prompt-templates`, {
-      headers: {
-        "Authorization": authHeader,
-        "Content-Type": "application/json",
-      },
-    });
+//     const response = await fetch(`${BACKEND_URL}/api/prompt-templates`, {
+//       headers: {
+//         "Authorization": authHeader,
+//         "Content-Type": "application/json",
+//       },
+//     });
 
-    if (!response.ok) {
-      throw new Error(`Backend error: ${response.status}`);
-    }
+//     if (!response.ok) {
+//       throw new Error(`Backend error: ${response.status}`);
+//     }
 
-    const data = await response.json();
-    return NextResponse.json({ prompts: data.prompts || data });
-  } catch (error) {
-    console.error("Error fetching prompts:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+//     const data = await response.json();
+//     return NextResponse.json({ prompts: data.prompts || data });
+//   } catch (error) {
+//     console.error("Error fetching prompts:", error);
+//     return NextResponse.json(
+//       { error: "Internal server error" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
+// TO DO: CHECK IF I NEED TO ADD THE PROMPT TO THE SUB-SERVICE
 // POST /api/admin/prompts - Create a new prompt template
 export async function POST(request: NextRequest) {
   try {
@@ -112,7 +114,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { template, isActive, dataSource } = body;
+    const { template, isActive, dataSource, sortOrder } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -126,17 +128,20 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Build update object with only provided fields
+    const updateData: Record<string, unknown> = {};
+    if (template !== undefined) updateData.template = template;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (dataSource !== undefined) updateData.dataSource = dataSource;
+    if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+
     const response = await fetch(`${BACKEND_URL}/api/prompts/${id}`, {
       method: "PATCH",
       headers: {
         "Authorization": authHeader,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        template,
-        isActive,
-        dataSource
-      }),
+      body: JSON.stringify(updateData),
     });
 
     if (!response.ok) {
@@ -155,6 +160,7 @@ export async function PATCH(
   }
 }
 
+// TO DO: CHECK IF I NEED TO DELETE THE PROMPT FROM THE SUB-SERVICE
 // DELETE /api/admin/prompts - Delete a prompt template
 export async function DELETE(request: NextRequest) {
   try {
@@ -179,7 +185,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch(`${BACKEND_URL}/api/prompt-templates/${id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/prompts/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": authHeader,

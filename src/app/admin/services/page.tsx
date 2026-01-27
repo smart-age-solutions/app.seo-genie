@@ -61,7 +61,7 @@ export default function ServicesAdminPage() {
   const [showNewSubServiceModal, setShowNewSubServiceModal] = useState(false);
   const [editingSubService, setEditingSubService] = useState<SubService | null>(null);
   const [selectedServiceForSub, setSelectedServiceForSub] = useState<string | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ type: "service" | "subservice"; id: string; name: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: "service" | "subservice" | "prompt"; id: string; name: string } | null>(null);
   const [showNewPromptModal, setShowNewPromptModal] = useState(false);
   const [selectedSubServiceForPrompt, setSelectedSubServiceForPrompt] = useState<string | null>(null);
 
@@ -108,6 +108,7 @@ export default function ServicesAdminPage() {
   };
 
   const toggleServiceActive = async (serviceId: string, isActive: boolean) => {
+    console.log("Toggling service active:", serviceId, isActive);
     try {
       await backendApi.services.update(serviceId, { isActive: !isActive });
       setToast({ message: `Service ${!isActive ? "enabled" : "disabled"} successfully`, type: "success" });
@@ -135,6 +136,20 @@ export default function ServicesAdminPage() {
     }
   };
 
+  const togglePromptActive = async (promptId: string, isActive: boolean) => {
+    try {
+      await backendApi.prompts.update(promptId, { isActive: !isActive });
+      setToast({ message: `Prompt ${!isActive ? "enabled" : "disabled"} successfully`, type: "success" });
+      fetchServices();
+    } catch (error) {
+      console.error("Error toggling prompt active:", error);
+      setToast({ 
+        message: error instanceof Error ? error.message : "Error toggling prompt active", 
+        type: "error" 
+      });
+    }
+  };
+
   const savePrompt = async () => {
     if (!editingPrompt || !editingPrompt.subServiceId) return;
 
@@ -151,6 +166,49 @@ export default function ServicesAdminPage() {
       console.error("Error updating prompt:", error);
       setToast({ 
         message: error instanceof Error ? error.message : "Error updating prompt", 
+        type: "error" 
+      });
+    }
+  };
+
+  const reorderPrompt = async (promptId: string, direction: "up" | "down", subServiceId: string) => {
+    try {
+      // Find the service and sub-service
+      const service = services.find(s => s.subServices.some(sub => sub.id === subServiceId));
+      if (!service) return;
+
+      const subService = service.subServices.find(sub => sub.id === subServiceId);
+      if (!subService) return;
+
+      // Sort prompts by sortOrder
+      const sortedPrompts = [...subService.prompts].sort((a, b) => a.sortOrder - b.sortOrder);
+      const currentIndex = sortedPrompts.findIndex(p => p.id === promptId);
+      
+      if (currentIndex === -1) return;
+
+      // Determine new index
+      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= sortedPrompts.length) return;
+
+      // Swap sortOrders
+      const currentPrompt = sortedPrompts[currentIndex];
+      const targetPrompt = sortedPrompts[newIndex];
+      
+      const tempSortOrder = currentPrompt.sortOrder;
+      const newSortOrder = targetPrompt.sortOrder;
+
+      // Update both prompts
+      await Promise.all([
+        backendApi.prompts.update(currentPrompt.id, { sortOrder: newSortOrder }),
+        backendApi.prompts.update(targetPrompt.id, { sortOrder: tempSortOrder }),
+      ]);
+
+      setToast({ message: "Prompt order updated successfully", type: "success" });
+      fetchServices();
+    } catch (error) {
+      console.error("Error reordering prompt:", error);
+      setToast({ 
+        message: error instanceof Error ? error.message : "Error reordering prompt", 
         type: "error" 
       });
     }
@@ -259,13 +317,28 @@ export default function ServicesAdminPage() {
     }
   };
 
+  const deletePrompt = async (promptId: string) => {
+    try {
+      await backendApi.prompts.delete(promptId);
+      setToast({ message: "Prompt deleted successfully", type: "success" });
+      setDeleteConfirm(null);
+      fetchServices();
+    } catch (error) {
+      console.error("Error deleting prompt:", error);
+      setToast({ 
+        message: error instanceof Error ? error.message : "Error deleting prompt", 
+        type: "error" 
+      });
+    }
+  };
+
   const createPrompt = async (data: {
     subServiceId: string;
     slug: string;
     name: string;
     description?: string;
     promptType: string;
-    dataSource: string;
+    dataSource?: string;
     template: string;
     placeholders?: string[];
   }) => {
@@ -494,30 +567,81 @@ export default function ServicesAdminPage() {
                           {subService.prompts.length === 0 ? (
                             <p className="text-white/40 text-center py-2">No prompts configured yet</p>
                           ) : (
-                            subService.prompts.map((prompt) => (
+                            [...subService.prompts].sort((a, b) => a.sortOrder - b.sortOrder).map((prompt, index, sortedArray) => (
                               <div key={prompt.id} className="bg-white/5 rounded p-3">
                                 <div className="flex items-center justify-between mb-2">
-                                  <div>
-                                    <h5 className="text-white font-medium">{prompt.name}</h5>
-                                    <p className="text-xs text-white/50">{prompt.description}</p>
-                                    <div className="flex gap-2 mt-1">
-                                      <span className="text-xs text-white/40">Type: {prompt.promptType}</span>
-                                      {prompt.promptType === "TOP_RESULTS" && prompt.dataSource && (
-                                        <span className="text-xs text-white/40">Source: {prompt.dataSource}</span>
-                                      )}
-                                      <span className="text-xs text-white/40">Version: {prompt.version}</span>
+                                  <div className="flex items-center gap-2 flex-1">
+                                    {/* Reorder buttons */}
+                                    <div className="flex flex-col gap-1">
+                                      <button
+                                        onClick={() => reorderPrompt(prompt.id, "up", subService.id)}
+                                        disabled={index === 0}
+                                        className="p-1 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed rounded transition-colors"
+                                        title="Move up"
+                                      >
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                        </svg>
+                                      </button>
+                                      <button
+                                        onClick={() => reorderPrompt(prompt.id, "down", subService.id)}
+                                        disabled={index === sortedArray.length - 1}
+                                        className="p-1 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed rounded transition-colors"
+                                        title="Move down"
+                                      >
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                    <div className="flex-1">
+                                      <h5 className="text-white font-medium">{prompt.name}</h5>
+                                      <p className="text-xs text-white/50">{prompt.description}</p>
+                                      <div className="flex gap-2 mt-1">
+                                        <span className="text-xs text-white/40">Type: {prompt.promptType}</span>
+                                        {prompt.promptType === "TOP_RESULTS" && prompt.dataSource && (
+                                          <span className="text-xs text-white/40">Source: {prompt.dataSource}</span>
+                                        )}
+                                        <span className="text-xs text-white/40">Version: {prompt.version}</span>
+                                      </div>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className={`px-2 py-1 rounded text-xs ${prompt.isActive ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>
+                                    <span className={`px-2 py-1 rounded text-xs ${prompt.isActive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
                                       {prompt.isActive ? "Active" : "Inactive"}
                                     </span>
-                                    <button
-                                      onClick={() => setEditingPrompt({ ...prompt, subServiceId: subService.id })}
-                                      className="px-3 py-1 bg-accent-purple hover:bg-accent-purple/80 text-white rounded text-sm transition-colors"
-                                    >
-                                      Edit
-                                    </button>
+                                    {isAdmin && (
+                                      <>
+                                        <button
+                                          onClick={() => togglePromptActive(prompt.id, prompt.isActive)}
+                                          className={`px-3 py-1 rounded text-sm transition-colors ${
+                                            prompt.isActive
+                                              ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                                              : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                                          }`}
+                                        >
+                                          {prompt.isActive ? "Disable" : "Enable"}
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingPrompt({ ...prompt, subServiceId: subService.id })}
+                                          className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
+                                          title="Edit prompt"
+                                        >
+                                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={() => setDeleteConfirm({ type: "prompt", id: prompt.id, name: prompt.name })}
+                                          className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded transition-colors"
+                                          title="Delete prompt"
+                                        >
+                                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                          </svg>
+                                        </button>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                                 {/* TO DO: Remove any placeholders from the template on frontend and backend */}
@@ -561,7 +685,9 @@ export default function ServicesAdminPage() {
               <p className="text-white/60 text-sm">
                 {deleteConfirm.type === "service" 
                   ? "This will also delete all sub-services and prompts associated with this service."
-                  : "This will also delete all prompts associated with this sub-service."
+                  : deleteConfirm.type === "subservice"
+                  ? "This will also delete all prompts associated with this sub-service."
+                  : "This will permanently delete the prompt."
                 }
               </p>
               <p className="text-red-400 text-sm mt-2">This action cannot be undone.</p>
@@ -577,8 +703,10 @@ export default function ServicesAdminPage() {
                 onClick={() => {
                   if (deleteConfirm.type === "service") {
                     deleteService(deleteConfirm.id);
-                  } else {
+                  } else if (deleteConfirm.type === "subservice") {
                     deleteSubService(deleteConfirm.id);
+                  } else {
+                    deletePrompt(deleteConfirm.id);
                   }
                 }}
                 className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
@@ -1085,7 +1213,6 @@ function NewPromptModal({
             />
             <p className="text-xs text-white/40 mt-1">Use curly braces for placeholders: {"{keyword}"}, {"{location}"}, etc.</p>
           </div>
-
           {/* TO DO: Remove any placeholders from the template on frontend and backend */}
           {/* <div>
             <label className="block text-white mb-2">Placeholders (comma-separated)</label>
