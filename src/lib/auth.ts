@@ -20,7 +20,9 @@ async function getGoogleCredentials(): Promise<{ clientId: string; clientSecret:
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
       },
+      cache: "no-store", // Ensure no caching
     });
 
     if (!response.ok) {
@@ -47,16 +49,21 @@ async function getGoogleCredentials(): Promise<{ clientId: string; clientSecret:
 }
 
 // Cache for Google credentials (refreshed on server restart or after TTL)
+// Note: In serverless environments (Vercel), this cache is per-instance
+// Each function invocation may have a fresh cache, so we use a shorter TTL
 let cachedGoogleCredentials: { clientId: string; clientSecret: string } | null = null;
 let credentialsCacheTime: number = 0;
-const CREDENTIALS_CACHE_TTL = 60 * 1000; // 1 minute cache
+const CREDENTIALS_CACHE_TTL = 30 * 1000; // 30 seconds cache (shorter for serverless)
 
 async function getCachedGoogleCredentials(): Promise<{ clientId: string; clientSecret: string } | null> {
   const now = Date.now();
+  // In serverless, always fetch fresh if cache is too old or doesn't exist
+  // This ensures credentials are always up-to-date
   if (cachedGoogleCredentials && now - credentialsCacheTime < CREDENTIALS_CACHE_TTL) {
     return cachedGoogleCredentials;
   }
   
+  // Always fetch fresh credentials (cache is just to avoid multiple calls in same request)
   cachedGoogleCredentials = await getGoogleCredentials();
   credentialsCacheTime = now;
   return cachedGoogleCredentials;
@@ -143,14 +150,10 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
     console.warn("Google OAuth provider not configured - credentials not found");
   }
 
-  // Get base URL for NextAuth - critical for Vercel deployment
-  const baseUrl = process.env.NEXTAUTH_URL || 
-                  (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
-
   return {
-    // Explicitly set the base URL - required for Vercel/serverless environments
-    url: baseUrl,
     // No adapter - using JWT strategy only
+    // Note: NEXTAUTH_URL environment variable is used by NextAuth automatically
+    // Make sure it's set correctly in Vercel environment variables
     providers,
     callbacks: {
       async signIn({ user, account }) {

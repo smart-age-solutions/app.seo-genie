@@ -23,7 +23,14 @@ export async function GET() {
     const settings = data.settings || data;
 
     // Return settings with credentials for NextAuth to use
-    return NextResponse.json({ settings });
+    // Prevent caching - credentials may change and need to be fresh
+    return NextResponse.json({ settings }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error("Error fetching Google OAuth settings:", error);
     return NextResponse.json({ settings: null });
