@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { useTypewriter, useTypewriterHTML } from "@/hooks/useTypewriter";
 
 export default function ResultsPage() {
-  const [searchData, setSearchData] = useState<SearchData | null>(null);
+  // const [searchData, setSearchData] = useState<SearchData | null>(null);
   const [topResults, setTopResults] = useState<TopResult[] | string>([]);
   const [topResultsType, setTopResultsType] = useState<"array" | "html">("array");
   const [intent, setIntent] = useState("");
@@ -19,7 +19,7 @@ export default function ResultsPage() {
   const [blueprintReady, setBlueprintReady] = useState(false);
   const [titlesBody, setTitlesBody] = useState<TitlesBody | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [googleUrl, setGoogleUrl] = useState("");
+  // const [googleUrl, setGoogleUrl] = useState("");
 
   const hasStartedRef = useRef(false);
 
@@ -158,8 +158,8 @@ export default function ResultsPage() {
         setIntentComplete(true);
       }
 
-      const keyword = data.keyword || data.collection || data.product || "";
-      setGoogleUrl(`https://www.google.com/search?q=${encodeURIComponent(`${keyword} ${data.location || ""}`)}`);
+      // const keyword = data.keyword || data.collection || data.product || "";
+      // setGoogleUrl(`https://www.google.com/search?q=${encodeURIComponent(`${keyword} ${data.location || ""}`)}`);
       
       setIsLoading(false);
     } catch {
@@ -168,7 +168,7 @@ export default function ResultsPage() {
     }
   }, []);
 
-  const keyword = searchData?.keyword || searchData?.collection || searchData?.product || "";
+  // const keyword = searchData?.keyword || searchData?.collection || searchData?.product || "";
 
   const { data: session } = useSession();
 

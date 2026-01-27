@@ -13,7 +13,7 @@ export async function getSessionToken(): Promise<string | null> {
     }
 
     // Try to get sessionToken from session (added in session callback)
-    const sessionToken = (session as any)?.sessionToken;
+    const sessionToken = session?.sessionToken;
     if (sessionToken) {
       return sessionToken;
     }

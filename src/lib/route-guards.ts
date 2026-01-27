@@ -2,8 +2,8 @@
  * Route guards and validation utilities
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { isValidSlug, parseServicePath } from "./slug-utils";
+import { NextResponse } from "next/server";
+import { isValidSlug } from "./slug-utils";
 
 /**
  * Validate dynamic route parameters for service-related routes

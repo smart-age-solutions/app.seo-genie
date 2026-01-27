@@ -67,13 +67,13 @@ export async function GET() {
             slug: service.slug,
             name: service.name,
             icon: serviceIcon,
-            subServices: subServices.map((s: any) => ({
-              id: s.id,
-              slug: s.slug,
-              name: s.name,
-              subtitle: s.subtitle,
-              image: s.image,
-              isActive: s.isActive,
+            subServices: subServices.map((s: Record<string, unknown>) => ({
+              id: s.id as string,
+              slug: s.slug as string,
+              name: s.name as string,
+              subtitle: s.subtitle as string | null,
+              image: s.image as string | null,
+              isActive: s.isActive as boolean,
             })),
           };
         } catch (error) {

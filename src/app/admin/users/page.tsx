@@ -42,7 +42,7 @@ export default function UsersPage() {
       if (filter.search) {
         const searchLower = filter.search.toLowerCase();
         filteredUsers = usersList.filter(
-          (user: any) =>
+          (user: User) =>
             user.name?.toLowerCase().includes(searchLower) ||
             user.email?.toLowerCase().includes(searchLower)
         );

@@ -61,9 +61,10 @@ export function MultiImageUpload({ label, images, onChange, maxImages = 3 }: Mul
       newImages[index] = data.url;
       // Remove trailing empty strings but keep the structure
       onChange(newImages);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Upload error:", err);
-      setError(err.message || "Failed to upload image");
+      const errorMessage = err instanceof Error ? err.message : "Failed to upload image";
+      setError(errorMessage);
     } finally {
       setIsUploading(null);
     }

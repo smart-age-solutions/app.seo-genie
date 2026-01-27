@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions, isManagerOrAdmin } from "@/lib/auth";
 import { getAuthHeader } from "@/lib/session-token";
-import { PromptType } from "@/types/database";
 
 const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_API_URL || "http://localhost:3001";
 

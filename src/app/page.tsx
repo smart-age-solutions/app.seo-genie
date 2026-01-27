@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Header, Footer, Background, SelectionCard, PageLoading, AuthGuard } from "@/components";
+import { Service } from "@/types/database";
 
 export default function HomePage() {
   const router = useRouter();
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function HomePage() {
       });
   }, []);
 
-  const handleServiceClick = (service: any) => {
+  const handleServiceClick = (service: Service) => {
     const slug = service.slug || service.name?.toLowerCase().replace(/\s+/g, "-");
     if (slug) {
       router.push(`/${slug}`);

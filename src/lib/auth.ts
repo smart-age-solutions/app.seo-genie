@@ -275,7 +275,7 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
           session.user.role = token.role as UserRole;
           session.user.status = token.status as UserStatus;
           // Add sessionToken to session so API routes can use it
-          (session as any).sessionToken = token.sessionToken as string;
+          session.sessionToken = token.sessionToken as string;
         }
         return session;
       },
@@ -325,7 +325,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
         session.user.status = token.status as UserStatus;
-        (session as any).sessionToken = token.sessionToken as string;
+        session.sessionToken = token.sessionToken as string;
       }
       return session;
     },

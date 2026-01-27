@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Service } from "@/types/database";
 
 export default function PageTest() {
   const [message, setMessage] = useState("Loading test page...");
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
 
   useEffect(() => {
     console.log("PageTest: useEffect triggered");
@@ -31,7 +32,7 @@ export default function PageTest() {
       <p>{message}</p>
       <p>Services loaded: {services.length}</p>
       <ul>
-        {services.map((service: any) => (
+        {services.map((service: Service) => (
           <li key={service.id}>{service.name}</li>
         ))}
       </ul>

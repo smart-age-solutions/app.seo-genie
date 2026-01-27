@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Service } from "@/types/database";
 
 export default function SimplePage() {
   const [message, setMessage] = useState("Loading...");
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
 
   useEffect(() => {
     console.log("Simple page: useEffect running");

@@ -1,37 +1,38 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogMeta = Record<string, unknown> | unknown[] | string | number | boolean | null | undefined;
 
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
 
-  private formatMessage(level: LogLevel, message: string, meta?: any): string {
+  private formatMessage(level: LogLevel, message: string, meta?: LogMeta): string {
     const timestamp = new Date().toISOString();
     const metaStr = meta ? ` ${JSON.stringify(meta)}` : '';
     return `[${timestamp}] ${level.toUpperCase()}: ${message}${metaStr}`;
   }
 
-  debug(message: string, meta?: any) {
+  debug(message: string, meta?: LogMeta) {
     if (this.isDevelopment) {
       console.debug(this.formatMessage('debug', message, meta));
     }
   }
 
-  info(message: string, meta?: any) {
+  info(message: string, meta?: LogMeta) {
     if (this.isDevelopment) {
       console.info(this.formatMessage('info', message, meta));
     }
   }
 
-  warn(message: string, meta?: any) {
+  warn(message: string, meta?: LogMeta) {
     console.warn(this.formatMessage('warn', message, meta));
   }
 
-  error(message: string, error?: any) {
+  error(message: string, error?: unknown) {
     // Always log errors, but sanitize sensitive data
     const sanitizedError = this.sanitizeError(error);
     console.error(this.formatMessage('error', message, sanitizedError));
   }
 
-  private sanitizeError(error: any): any {
+  private sanitizeError(error: unknown): unknown {
     if (!error) return error;
 
     // Remove sensitive information from error objects
