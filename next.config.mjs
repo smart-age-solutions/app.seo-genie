@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  // output: "standalone" - Removido para Vercel (standalone é para Docker/self-hosted)
   images: {
     remotePatterns: [
       {
