@@ -32,14 +32,14 @@ class Logger {
     console.error(this.formatMessage('error', message, sanitizedError));
   }
 
-  private sanitizeError(error: unknown): unknown {
-    if (!error) return error;
+  private sanitizeError(error: unknown): LogMeta {
+    if (!error) return error as LogMeta;
 
     // Remove sensitive information from error objects
-    const sanitized = { ...error };
+    if (typeof error === 'object' && error !== null) {
+      const sanitized = { ...error } as Record<string, unknown>;
 
-    // Remove tokens, passwords, secrets from error messages
-    if (typeof error === 'object') {
+      // Remove tokens, passwords, secrets from error messages
       delete sanitized.token;
       delete sanitized.password;
       delete sanitized.secret;
@@ -47,12 +47,17 @@ class Logger {
 
       // Sanitize message if it contains sensitive data
       if (sanitized.message && typeof sanitized.message === 'string') {
-        sanitized.message = sanitized.message.replace(/Bearer\s+[^\s]+/g, 'Bearer [REDACTED]');
-        sanitized.message = sanitized.message.replace(/session_[^\s]+/g, 'session_[REDACTED]');
+        let message = sanitized.message;
+        message = message.replace(/Bearer\s+[^\s]+/g, 'Bearer [REDACTED]');
+        message = message.replace(/session_[^\s]+/g, 'session_[REDACTED]');
+        sanitized.message = message;
       }
+
+      return sanitized;
     }
 
-    return sanitized;
+    // For non-object errors, return as-is (string, number, etc. are valid LogMeta)
+    return error as LogMeta;
   }
 }
 

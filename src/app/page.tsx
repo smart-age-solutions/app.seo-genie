@@ -41,8 +41,6 @@ export default function HomePage() {
     services.map((service) => {
       const imageSources = service.images?.length > 0
         ? service.images
-        : service.image
-        ? [service.image]
         : [];
 
       return {
