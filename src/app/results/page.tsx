@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
-import { SearchData, TopResult, TitlesBody } from "@/lib/api";
+import { TopResult, TitlesBody } from "@/lib/api";
+// import { SearchData, TopResult, TitlesBody } from "@/lib/api";
 import { AuthGuard, Toast, Background, ServiceNav, UserMenu } from "@/components";
 import { useSession } from "next-auth/react";
 import { useTypewriter, useTypewriterHTML } from "@/hooks/useTypewriter";
@@ -122,7 +123,7 @@ export default function ResultsPage() {
     }
 
     try {
-      const data = JSON.parse(storedData) as SearchData;
+      // const data = JSON.parse(storedData) as SearchData;
       const results = JSON.parse(storedResults) as {
         topResults: TopResult[] | string;
         topResultsType?: "array" | "html";
@@ -132,7 +133,7 @@ export default function ResultsPage() {
       };
       
       // Set all data immediately - no async needed
-      setSearchData(data);
+      // setSearchData(data); // Removed - searchData is not used
       
       // Determine type based on stored type or datasource
       let resultsType: "array" | "html" = results.topResultsType || "array";
