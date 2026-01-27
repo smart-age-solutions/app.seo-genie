@@ -86,8 +86,15 @@ export async function GET() {
       .map((result) => result.status === "fulfilled" ? result.value : null)
       .filter((service): service is NonNullable<typeof service> => service !== null);
 
+    // Prevent caching - ensure fresh data on every request
     return NextResponse.json({
       services: servicesWithSubServices,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
     });
   } catch (error) {
     console.error("Error fetching services for navigation:", error);

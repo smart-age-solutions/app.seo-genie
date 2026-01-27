@@ -11,7 +11,13 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/services/public")
+    // Add cache-busting query parameter and no-cache headers
+    fetch("/api/services/public?" + new Date().getTime(), {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    })
       .then(response => {
         if (response.ok) {
           return response.json();

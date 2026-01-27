@@ -1,14 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { existsSync } from "fs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getAuthHeader } from "@/lib/session-token";
+
+const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_API_URL || "http://localhost:3001";
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/upload
- * Upload an image file to the public/images/services directory
+ * Upload an image file - proxies to backend API
+ * Vercel is serverless and doesn't have persistent file system, so we use backend
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const authHeader = await getAuthHeader();
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Get form data from request
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -37,31 +61,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique filename
-    // const timestamp = Date.now();
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `${originalName}`;
-
-    // Create upload directory if it doesn't exist
-    const uploadDir = path.join(process.cwd(), "public", "images", "services");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    // Convert file to buffer and save
+    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filepath = path.join(uploadDir, filename);
-    await writeFile(filepath, buffer);
 
-    // Return the public URL
-    const publicUrl = `/images/services/${filename}`;
+    // Create form data for backend
+    const backendFormData = new FormData();
+    const blob = new Blob([buffer], { type: file.type });
+    backendFormData.append("file", blob, file.name);
 
-    return NextResponse.json({
-      success: true,
-      url: publicUrl,
-      filename,
+    // Forward to backend API
+    const response = await fetch(`${BACKEND_URL}/api/upload`, {
+      method: "POST",
+      headers: {
+        "Authorization": authHeader,
+      },
+      body: backendFormData,
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: "Backend upload failed" }));
+      return NextResponse.json(
+        { error: errorData.error || "Failed to upload file" },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error uploading file:", error);
     return NextResponse.json(
@@ -73,10 +100,27 @@ export async function POST(request: NextRequest) {
 
 /**
  * DELETE /api/upload
- * Delete an uploaded image
+ * Delete an uploaded image - proxies to backend API
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const authHeader = await getAuthHeader();
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const filename = searchParams.get("filename");
 
@@ -95,23 +139,24 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const filepath = path.join(process.cwd(), "public", "images", "services", filename);
+    // Forward to backend API
+    const response = await fetch(`${BACKEND_URL}/api/upload?filename=${encodeURIComponent(filename)}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": authHeader,
+      },
+    });
 
-    if (!existsSync(filepath)) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: "Backend delete failed" }));
       return NextResponse.json(
-        { error: "File not found" },
-        { status: 404 }
+        { error: errorData.error || "Failed to delete file" },
+        { status: response.status }
       );
     }
 
-    // Delete the file
-    const { unlink } = await import("fs/promises");
-    await unlink(filepath);
-
-    return NextResponse.json({
-      success: true,
-      message: "File deleted successfully",
-    });
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error deleting file:", error);
     return NextResponse.json(

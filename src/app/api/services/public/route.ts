@@ -28,7 +28,15 @@ export async function GET() {
 
     const data = await response.json();
     console.log("API: Returning services data, count:", data.services?.length || 0);
-    return NextResponse.json(data);
+    
+    // Prevent caching - ensure fresh data on every request
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error("Error fetching public services:", error);
     return NextResponse.json(
