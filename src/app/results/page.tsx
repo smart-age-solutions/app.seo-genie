@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { SearchData, TopResult, TitlesBody } from "@/lib/api";
-import { AuthGuard, Toast } from "@/components";
+import { AuthGuard, Toast, Background, ServiceNav, UserMenu } from "@/components";
+import { useSession } from "next-auth/react";
 import { useTypewriter, useTypewriterHTML } from "@/hooks/useTypewriter";
 
 export default function ResultsPage() {
@@ -169,10 +170,25 @@ export default function ResultsPage() {
 
   const keyword = searchData?.keyword || searchData?.collection || searchData?.product || "";
 
+  const { data: session } = useSession();
+
   return (
     <AuthGuard>
-      <main className="min-h-screen flex flex-col lg:flex-row print:flex-col">
-        {error && <Toast message={error} type="error" duration={8000} onClose={() => setError(null)} />}
+      <main className="min-h-screen flex flex-col">
+        <Background />
+        {/* Top bar with navigation and user menu only */}
+        {session && (
+          <header className="w-full pt-4 pb-2 px-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex justify-end items-center gap-3">
+                <ServiceNav />
+                <UserMenu />
+              </div>
+            </div>
+          </header>
+        )}
+        <div className="flex-1 flex flex-col lg:flex-row print:flex-col">
+          {error && <Toast message={error} type="error" duration={8000} onClose={() => setError(null)} />}
 
         {/* Left Column - Top Results */}
         <div className="w-full lg:w-1/2 results-left min-h-screen print:min-h-0 print:break-after-page">
@@ -266,6 +282,7 @@ export default function ResultsPage() {
               </div>
             ) : null}
           </div>
+        </div>
         </div>
       </main>
     </AuthGuard>
