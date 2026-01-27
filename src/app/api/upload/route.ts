@@ -61,16 +61,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Create form data for backend
+    // Create FormData for backend
+    // In Vercel/serverless, we can pass the File directly to FormData
     const backendFormData = new FormData();
-    const blob = new Blob([buffer], { type: file.type });
-    backendFormData.append("file", blob, file.name);
+    backendFormData.append("file", file);
 
     // Forward to backend API
+    // Note: Don't set Content-Type header - fetch will set it automatically with boundary
     const response = await fetch(`${BACKEND_URL}/api/upload`, {
       method: "POST",
       headers: {
