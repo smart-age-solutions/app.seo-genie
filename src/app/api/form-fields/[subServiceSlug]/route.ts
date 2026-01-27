@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { urlToDbSlug } from "@/lib/slug-utils";
 import { validateSubServiceRoute } from "@/lib/route-guards";
 
-// This route is public and can be statically generated if needed
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_API_URL || "http://backend:3001";
 
