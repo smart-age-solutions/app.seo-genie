@@ -13,9 +13,9 @@ export const dynamic = 'force-dynamic';
  * Returns all active service categories for display on the home page
  * Public endpoint - no authentication required
  */
-export async function GET(request?: Request) {
+export async function GET(request: Request) {
   console.log("[services/public] ===== GET handler called =====");
-  console.log("[services/public] Request URL:", request?.url || "no request object");
+  console.log("[services/public] Request URL:", request.url);
   console.log("[services/public] BACKEND_URL:", BACKEND_URL);
   console.log("[services/public] Environment check:", {
     BACKEND_URL: !!process.env.BACKEND_URL,
