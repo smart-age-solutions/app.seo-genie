@@ -4,15 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { getAuthHeader } from "@/lib/session-token";
 import { PromptType } from "@/types/database";
 
-// In development (Docker): use internal network URL (BACKEND_API_URL)
-// In production (Vercel/Fly.io): use public URL (NEXT_PUBLIC_API_URL)
+// Use same backend URL resolution as other routes
 const getBackendUrl = (): string => {
-  // Server-side: prefer internal URL for Docker, fallback to public URL
-  if (process.env.BACKEND_API_URL) {
-    return process.env.BACKEND_API_URL;
-  }
-  // Fallback to public URL (used in production on Vercel)
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  return process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_API_URL || "http://localhost:3001";
 };
 
 export async function POST(request: NextRequest) {
@@ -30,6 +24,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const backendUrl = getBackendUrl();
+    console.log("[search] Backend URL from env:", {
+      BACKEND_URL: process.env.BACKEND_URL,
+      NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
+      BACKEND_API_URL: process.env.BACKEND_API_URL,
+      resolved: backendUrl,
+    });
     
     // Ensure URL has protocol
     let backendBaseUrl = backendUrl;
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
     }
     
     const searchUrl = `${backendBaseUrl}/search_stream`;
+    console.log("[search] Search URL:", searchUrl);
      // Fetch prompts from database to get titles and datasource
      let titles: { resultsTitle: string; intentTitle: string; blueprintTitle: string; topResultsDataSource?: string } | null = null;
      if (body.subServiceId) {
