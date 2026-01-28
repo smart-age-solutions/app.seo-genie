@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
  * Public endpoint - no authentication required
  */
 export async function GET(request: Request) {
+  console.log("[services/public] GET request received", request.url);
   // console.log("[services/public] Environment check:", {
   //   BACKEND_URL: !!process.env.BACKEND_URL,
   //   NEXT_PUBLIC_BACKEND_URL: !!process.env.NEXT_PUBLIC_BACKEND_URL,
