@@ -31,13 +31,22 @@ export function ServiceNav() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch("/api/services/navigation");
+        const response = await fetch("/api/services/navigation", {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setServices(data.services || []);
+        } else {
+          console.error("Error fetching services:", response.status, response.statusText);
+          setServices([]);
         }
       } catch (error) {
         console.error("Error fetching services:", error);
+        setServices([]);
       } finally {
         setIsLoading(false);
       }

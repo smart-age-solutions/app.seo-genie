@@ -11,6 +11,9 @@ export const dynamic = 'force-dynamic';
  * Proxies to backend
  */
 export async function GET() {
+  console.log("[navigation] Fetching services for navigation");
+  console.log("[navigation] BACKEND_URL:", BACKEND_URL);
+  
   try {
     // Get all active services
     const servicesResponse = await fetch(`${BACKEND_URL}/api/services/public`, {
@@ -18,14 +21,29 @@ export async function GET() {
       headers: {
         "Content-Type": "application/json",
       },
+      cache: "no-store",
     });
 
+    console.log("[navigation] Services response status:", servicesResponse.status);
+
     if (!servicesResponse.ok) {
-      throw new Error("Backend request failed");
+      const errorText = await servicesResponse.text().catch(() => "Unknown error");
+      console.error("[navigation] Backend request failed:", servicesResponse.status, errorText);
+      // Return empty array instead of error to prevent navbar breakage
+      return NextResponse.json({
+        services: [],
+      }, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      });
     }
 
     const servicesData = await servicesResponse.json();
     const services = servicesData.services || [];
+    console.log("[navigation] Found services:", services.length);
 
     // For each service, get its sub-services using public route
     // Use Promise.allSettled to handle cases where services may have been deleted
@@ -39,6 +57,7 @@ export async function GET() {
               headers: {
                 "Content-Type": "application/json",
               },
+              cache: "no-store",
             }
           );
 
@@ -99,10 +118,21 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Error fetching services for navigation:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch services" },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("[navigation] Error fetching services for navigation:", errorMessage);
+    if (error instanceof Error && error.stack) {
+      console.error("[navigation] Stack:", error.stack);
+    }
+    
+    // Return empty array instead of error to prevent navbar breakage
+    return NextResponse.json({
+      services: [],
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   }
 }
