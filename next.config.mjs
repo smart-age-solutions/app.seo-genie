@@ -13,6 +13,21 @@ const nextConfig = {
         hostname: "*.googleusercontent.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "sas-seogenie-images.s3.us-east-1.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.*.amazonaws.com",
+        pathname: "/**",
+      },
     ],
   },
 };
