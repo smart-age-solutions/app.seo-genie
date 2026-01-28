@@ -9,61 +9,68 @@ import { randomBytes } from "crypto";
 // Uses direct API route that bypasses authentication (needed for NextAuth initialization)
 async function getGoogleCredentials(): Promise<{ clientId: string; clientSecret: string } | null> {
   try {
-    // Use direct API route that doesn't require authentication
-    const isServer = typeof window === "undefined";
-    const baseUrl = isServer
-      ? process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-      : "";
-    const url = `${baseUrl}/api/auth/google-status`;
+    // Fetch directly from backend - avoid using internal Next.js route in serverless
+    // This prevents issues with self-referencing URLs in Vercel
+    const backendUrl = process.env.BACKEND_URL || 
+                       process.env.NEXT_PUBLIC_BACKEND_URL || 
+                       process.env.BACKEND_API_URL || 
+                       "http://localhost:3001";
+    
+    const url = `${backendUrl}/api/public/settings/google`;
+    
+    console.log("[getGoogleCredentials] Fetching from backend:", url);
     
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
       },
       cache: "no-store", // Ensure no caching
     });
 
     if (!response.ok) {
-      // If status endpoint returns false or error, return null (no Google OAuth)
+      console.warn(`[getGoogleCredentials] Backend returned ${response.status}: ${response.statusText}`);
       return null;
     }
 
     const data = await response.json();
-    const settings = data.settings;
+    const settings = data.settings || data;
 
     if (settings?.oauthClientId && settings?.oauthClientSecret) {
+      console.log("[getGoogleCredentials] Successfully retrieved credentials");
       return {
         clientId: settings.oauthClientId,
         clientSecret: settings.oauthClientSecret,
       };
     }
+    
+    console.warn("[getGoogleCredentials] Credentials not found in response");
     return null;
   } catch (error) {
     // Log error but don't throw - allow app to continue without Google OAuth
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error fetching Google credentials from backend (non-blocking):", errorMessage);
+    console.error("[getGoogleCredentials] Error:", errorMessage);
+    if (error instanceof Error && error.stack) {
+      console.error("[getGoogleCredentials] Stack:", error.stack);
+    }
     return null;
   }
 }
 
 // Cache for Google credentials (refreshed on server restart or after TTL)
-// Note: In serverless environments (Vercel), this cache is per-instance
-// Each function invocation may have a fresh cache, so we use a shorter TTL
+// Note: In serverless environments (Vercel), cache is per-instance
 let cachedGoogleCredentials: { clientId: string; clientSecret: string } | null = null;
 let credentialsCacheTime: number = 0;
-const CREDENTIALS_CACHE_TTL = 30 * 1000; // 30 seconds cache (shorter for serverless)
+const CREDENTIALS_CACHE_TTL = 10 * 1000; // 10 seconds cache (short for serverless)
 
 async function getCachedGoogleCredentials(): Promise<{ clientId: string; clientSecret: string } | null> {
   const now = Date.now();
-  // In serverless, always fetch fresh if cache is too old or doesn't exist
-  // This ensures credentials are always up-to-date
   if (cachedGoogleCredentials && now - credentialsCacheTime < CREDENTIALS_CACHE_TTL) {
+    console.log("[getCachedGoogleCredentials] Using cached credentials");
     return cachedGoogleCredentials;
   }
   
-  // Always fetch fresh credentials (cache is just to avoid multiple calls in same request)
+  console.log("[getCachedGoogleCredentials] Cache expired, fetching fresh credentials");
   cachedGoogleCredentials = await getGoogleCredentials();
   credentialsCacheTime = now;
   return cachedGoogleCredentials;
@@ -132,7 +139,6 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
 
   // Only add Google provider if credentials are configured
   if (googleCredentials) {
-    console.log("Google OAuth provider configured successfully");
     providers.unshift(
       GoogleProvider({
         clientId: googleCredentials.clientId,
@@ -146,14 +152,10 @@ export async function getAuthOptions(): Promise<NextAuthOptions> {
         },
       })
     );
-  } else {
-    console.warn("Google OAuth provider not configured - credentials not found");
   }
 
   return {
     // No adapter - using JWT strategy only
-    // Note: NEXTAUTH_URL environment variable is used by NextAuth automatically
-    // Make sure it's set correctly in Vercel environment variables
     providers,
     callbacks: {
       async signIn({ user, account }) {

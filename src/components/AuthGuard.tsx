@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { LoadingOverlay } from "./LoadingOverlay";
 
 interface AuthGuardProps {
@@ -12,32 +12,15 @@ interface AuthGuardProps {
 export function AuthGuard({ children }: AuthGuardProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    // Add timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (status === "loading") {
-        console.warn("Session loading timeout - redirecting to login");
-        if (!hasRedirected) {
-          setHasRedirected(true);
-          router.push("/login");
-        }
-      }
-    }, 5000); // 5 second timeout
+    if (status === "loading") return;
 
-    if (status === "loading") {
-      return () => clearTimeout(timeoutId);
-    }
-
-    if (!session && !hasRedirected) {
-      setHasRedirected(true);
+    if (!session) {
       router.push("/login");
-      return () => clearTimeout(timeoutId);
+      return;
     }
-
-    return () => clearTimeout(timeoutId);
-  }, [session, status, router, hasRedirected]);
+  }, [session, status, router]);
 
   if (status === "loading") {
     return <LoadingOverlay isVisible={true} message="Loading..." />;

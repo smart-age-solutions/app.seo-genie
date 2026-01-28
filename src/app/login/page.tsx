@@ -81,23 +81,9 @@ function LoginForm() {
     setError("");
     setIsLoading(true);
     try {
-      console.log("Attempting Google sign in...");
-      // signIn with Google should redirect automatically
-      // If it doesn't redirect, there's likely a configuration issue
-      const result = await signIn("google", { 
-        callbackUrl: window.location.origin + "/",
-        redirect: true
-      });
-      
-      // This code should only execute if redirect is false or there's an error
-      if (result && !result.ok) {
-        console.error("Google sign in failed:", result.error);
-        setError(result.error || "Failed to sign in with Google. Please try again.");
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Google login error:", error);
-      setError("Failed to sign in with Google. Please check console for details.");
+      await signIn("google", { callbackUrl: "/" });
+    } catch {
+      setError("Failed to sign in with Google. Please try again.");
       setIsLoading(false);
     }
   };
@@ -210,7 +196,6 @@ function LoginForm() {
             </div>
 
             <button
-              type="button"
               onClick={handleGoogleLogin}
               disabled={isLoading}
               className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"

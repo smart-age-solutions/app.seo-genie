@@ -10,14 +10,7 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <SessionProvider
-      // Add basePath if NextAuth is not at /api/auth
-      basePath="/api/auth"
-      // Add refetchInterval to prevent stale sessions
-      refetchInterval={60}
-      // Add refetchOnWindowFocus to keep session fresh
-      refetchOnWindowFocus={true}
-    >
+    <SessionProvider>
       <PageTransition>{children}</PageTransition>
     </SessionProvider>
   );

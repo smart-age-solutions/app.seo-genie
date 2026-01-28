@@ -52,13 +52,15 @@ export async function GET() {
             return null;
           }
 
-          // Use same image loading logic as homepage: images array
+          // Use same image loading logic as homepage: images array > image > icon
           const imagesArray = Array.isArray(service.images) ? service.images : [];
           const imageSources = imagesArray.length > 0
             ? imagesArray
+            : service.image
+            ? [service.image]
             : [];
           
-          const serviceIcon = imageSources.length > 0 ? (imageSources[0] as string) : undefined;
+          const serviceIcon = imageSources.length > 0 ? (imageSources[0] as string) : (service.icon as string | undefined);
 
           return {
             id: service.id,
