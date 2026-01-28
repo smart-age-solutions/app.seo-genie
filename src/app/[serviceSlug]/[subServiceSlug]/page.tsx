@@ -50,9 +50,20 @@ export default function DynamicSubServicePage() {
     const fetchData = async () => {
       try {
         // Use subServiceSlug (with hyphens) for API calls - APIs will normalize internally
+        // Add cache: 'no-store' to prevent browser caching
         const [serviceResponse, fieldsResponse] = await Promise.all([
-          fetch(`/api/sub-services/slug/${subServiceSlug}`),
-          fetch(`/api/form-fields/${subServiceSlug}`),
+          fetch(`/api/sub-services/slug/${subServiceSlug}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+            },
+          }),
+          fetch(`/api/form-fields/${subServiceSlug}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+            },
+          }),
         ]);
 
         if (cancelled) return;

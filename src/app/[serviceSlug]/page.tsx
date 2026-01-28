@@ -33,7 +33,12 @@ export default function ServiceSubServicesPage() {
   useEffect(() => {
     const fetchSubServices = async () => {
       try {
-        const response = await fetch(`/api/services/${serviceSlug}/sub-services`);
+        const response = await fetch(`/api/services/${serviceSlug}/sub-services`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setService(data.service);

@@ -34,12 +34,21 @@ export async function GET(
       headers: {
         "Content-Type": "application/json",
       },
+      cache: "no-store",
+      next: { revalidate: 0 },
     });
 
     if (!serviceResponse.ok) {
       return NextResponse.json(
         { error: "Service not found or inactive" },
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        }
       );
     }
 
@@ -59,6 +68,12 @@ export async function GET(
       },
       subServices: activeSubServices,
       count: serviceData.count,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
     });
   } catch (error) {
     console.error("Error fetching sub-services:", error);

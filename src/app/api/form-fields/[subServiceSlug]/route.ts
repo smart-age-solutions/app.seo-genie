@@ -34,20 +34,35 @@ export async function GET(
       headers: {
         "Content-Type": "application/json",
       },
+      cache: "no-store",
+      next: { revalidate: 0 },
     });
 
     if (!response.ok) {
       if (response.status === 404) {
         return NextResponse.json(
           { error: "Sub-service not found or inactive" },
-          { status: 404 }
+          { 
+            status: 404,
+            headers: {
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+            },
+          }
         );
       }
       throw new Error("Backend request failed");
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error("Error fetching form fields:", error);
     return NextResponse.json(
