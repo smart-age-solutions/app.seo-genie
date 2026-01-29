@@ -33,11 +33,18 @@ const AI_PROVIDERS = [
 
 const AI_MODELS = {
   openai: [
-    { value: "gpt-4", label: "GPT-4" },
-    { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+    { value: "gpt-5.2", label: "GPT-5.2" },
+    { value: "gpt-5.1", label: "GPT-5.1" },
+    { value: "gpt-5", label: "GPT-5" },
+    { value: "gpt-5-mini", label: "GPT-5 Mini" },
+    { value: "gpt-5-nano", label: "GPT-5 Nano" },
+    // { value: "gpt-5-pro", label: "GPT-5 Pro" },
+    { value: "gpt-4.1", label: "GPT-4.1" },
+    { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
+    { value: "gpt-4.1-nano", label: "GPT-4.1 Nano" },
     { value: "gpt-4o", label: "GPT-4o" },
     { value: "gpt-4o-mini", label: "GPT-4o Mini" },
-    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+    { value: "gpt-4", label: "GPT-4" },
   ],
   // anthropic: [
   //   { value: "claude-3-opus", label: "Claude 3 Opus" },
@@ -57,7 +64,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
-  const [newApiKey, setNewApiKey] = useState("");
+  const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   
   // Google settings form state - use null to track if field was modified
@@ -140,12 +147,12 @@ export default function SettingsPage() {
         return;
       }
 
-      if (newApiKey) {
+      if (newApiKey !== null) {
         payload.apiKey = newApiKey;
       }
 
       await backendApi.settings.ai.update(payload);
-      setNewApiKey("");
+      setNewApiKey(null);
       setToast({ message: "AI settings saved successfully!", type: "success" });
       fetchSettings();
     } catch (error) {
@@ -241,7 +248,7 @@ export default function SettingsPage() {
                 AI Provider
               </label>
               <select
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                className="dark-select"
                 value={aiSettings?.aiProvider || "openai"}
                 onChange={(e) =>
                   setAISettings({
@@ -264,7 +271,7 @@ export default function SettingsPage() {
                 Model
               </label>
               <select
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                className="dark-select"
                 value={aiSettings?.aiModel || ""}
                 onChange={(e) =>
                   setAISettings({ ...aiSettings!, aiModel: e.target.value })
@@ -309,7 +316,7 @@ export default function SettingsPage() {
               </label>
               <input
                 type="number"
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                className="dark-input"
                 value={aiSettings?.maxTokens || 4000}
                 onChange={(e) =>
                   setAISettings({
@@ -327,22 +334,13 @@ export default function SettingsPage() {
               <label className="block text-white/70 text-sm mb-2">
                 OpenAI API Key
               </label>
-              <div className="flex gap-2">
-                <input
-                  type={showApiKey ? "text" : "password"}
-                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
-                  placeholder={aiSettings?.hasApiKey ? "Enter new key to replace..." : "sk-..."}
-                  value={newApiKey}
-                  onChange={(e) => setNewApiKey(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
-                >
-                  {showApiKey ? "👁️" : "👁️‍🗨️"}
-                </button>
-              </div>
+              <input
+                type={showApiKey ? "text" : "password"}
+                className="dark-input"
+                placeholder={aiSettings?.hasApiKey ? "Enter new key to replace..." : "sk-..."}
+                value={newApiKey !== null ? newApiKey : (aiSettings?.apiKey || "")}
+                onChange={(e) => setNewApiKey(e.target.value)}
+              />
               <div className="flex items-center gap-2 mt-1">
                 {aiSettings?.hasApiKey ? (
                   <>
@@ -366,13 +364,25 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <button
-            onClick={handleSaveAISettings}
-            disabled={isSaving}
-            className="genie-btn disabled:opacity-50"
-          >
-            {isSaving ? "Saving..." : "Save AI Settings"}
-          </button>
+          <div className="flex items-center gap-4">
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="dark-btn text-sm"
+              >
+                {showApiKey ? "🙈 Hide Secret" : "👁️ Show Secret"}
+              </button>
+            )}
+
+            <button
+              onClick={handleSaveAISettings}
+              disabled={isSaving}
+              className="genie-btn disabled:opacity-50"
+            >
+              {isSaving ? "Saving..." : "Save AI Settings"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -411,7 +421,7 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type={showGoogleSecrets ? "text" : "password"}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+                    className="dark-input"
                     placeholder={googleSettings?.hasOauthClientId ? "Enter new to replace..." : "xxxx.apps.googleusercontent.com"}
                     value={newGoogleOAuthClientId !== null ? newGoogleOAuthClientId : (googleSettings?.oauthClientId || "")}
                     onChange={(e) => setNewGoogleOAuthClientId(e.target.value)}
@@ -441,7 +451,7 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type={showGoogleSecrets ? "text" : "password"}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+                    className="dark-input"
                     placeholder={googleSettings?.hasOauthClientSecret ? "Enter new to replace..." : "GOCSPX-xxxxx"}
                     value={newGoogleOAuthClientSecret !== null ? newGoogleOAuthClientSecret : (googleSettings?.oauthClientSecret || "")}
                     onChange={(e) => setNewGoogleOAuthClientSecret(e.target.value)}
@@ -500,7 +510,7 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type={showGoogleSecrets ? "text" : "password"}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+                    className="dark-input"
                     placeholder={googleSettings?.hasSearchApiKey ? "Enter new to replace..." : "AIzaSy..."}
                     value={newGoogleSearchApiKey !== null ? newGoogleSearchApiKey : (googleSettings?.searchApiKey || "")}
                     onChange={(e) => setNewGoogleSearchApiKey(e.target.value)}
@@ -530,7 +540,7 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type={showGoogleSecrets ? "text" : "password"}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+                    className="dark-input"
                     placeholder={googleSettings?.hasSearchEngineId ? "Enter new to replace..." : "xxxxx:xxxxx"}
                     value={newGoogleSearchEngineId !== null ? newGoogleSearchEngineId : (googleSettings?.searchEngineId || "")}
                     onChange={(e) => setNewGoogleSearchEngineId(e.target.value)}
@@ -560,9 +570,9 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setShowGoogleSecrets(!showGoogleSecrets)}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors text-sm"
+                className="dark-btn text-sm"
               >
-                {showGoogleSecrets ? "🙈 Hide Secrets" : "👁️ Show Secrets"}
+                {showGoogleSecrets ? "🙈 Hide Secret" : "👁️ Show Secret"}
               </button>
 
               <button

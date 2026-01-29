@@ -30,10 +30,11 @@ export default function ResultsPage() {
   }, [intent]);
 
   // Typewriter for intent - use HTML typewriter if intent contains HTML, otherwise use text typewriter
+  // Speed = characters per update cycle (higher = faster, updates at ~20-30fps)
   const { displayedText: displayedIntentText, isTyping: isTypingIntentText } = useTypewriter(
     intentIsHTML ? "" : intent,
     {
-      speed: 30,
+      speed: 3, // readable text speed
       onComplete: () => setIntentComplete(true),
     }
   );
@@ -41,7 +42,7 @@ export default function ResultsPage() {
   const { displayedHTML: displayedIntentHTML, isTyping: isTypingIntentHTML } = useTypewriterHTML(
     intentIsHTML ? intent : "",
     {
-      speed: 5,
+      speed: 10, // HTML content speed
       onComplete: () => setIntentComplete(true),
     }
   );
@@ -59,7 +60,7 @@ export default function ResultsPage() {
   // Typewriter for blueprint - only start when intent is complete (or if there's no intent)
   const { displayedHTML: displayedBlueprintHTML, isTyping: isTypingBlueprint } = useTypewriterHTML(
     shouldShowBlueprint ? blueprint : "",
-    { speed: 5 }
+    { speed: 20 } // fast smooth typing for blueprint
   );
 
   // Convert top results to HTML format for typewriter effect (only for array type - Google datasource)
@@ -105,7 +106,7 @@ export default function ResultsPage() {
 
   const { displayedHTML: displayedTopResultsHTML, isTyping: isTypingTopResults } = useTypewriterHTML(
     topResultsContent,
-    { speed: 5 }
+    { speed: 20 } // fast smooth typing for top results
   );
 
   // Load results from localStorage on mount - synchronous for instant display
@@ -231,7 +232,7 @@ export default function ResultsPage() {
                 ) : (
                   <div dangerouslySetInnerHTML={{ __html: displayedTopResultsHTML }} />
                 )}
-                {isTypingTopResults && <span className="inline-block w-2 h-5 bg-gray-800 animate-pulse ml-1">|</span>}
+                {isTypingTopResults}
               </div>
             )}
 
@@ -249,7 +250,7 @@ export default function ResultsPage() {
                 ) : (
                   <p className="text-xl font-bold text-gray-800 uppercase">
                     {displayedIntentText}
-                    {isTypingIntentText && <span className="animate-pulse">|</span>}
+                    {isTypingIntentText}
                   </p>
                 )}
               </div>
@@ -279,7 +280,7 @@ export default function ResultsPage() {
                   <p><span className="font-bold">Location:</span> {searchData?.location}</p>
                 </div> */}
                 <div className="blueprint-content" dangerouslySetInnerHTML={{ __html: displayedBlueprintHTML }} />
-                {isTypingBlueprint && <span className="inline-block w-2 h-5 bg-gray-800 animate-pulse ml-1">|</span>}
+                {isTypingBlueprint}
               </div>
             ) : null}
           </div>

@@ -70,6 +70,106 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
+/* Safari/WebKit form element reset - exclude checkbox and radio */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0;
+  /* Remove Safari inner shadow */
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+/* Checkbox and radio styling for dark backgrounds */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4f2d7f;
+  cursor: pointer;
+}
+
+/* Preserve border-radius after reset */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+select,
+textarea {
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+/* Number input - remove spinners for consistent look */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Range input - Safari fix */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 8px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background: rgba(255, 255, 255, 0.2);
+  height: 8px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f2d7f;
+  margin-top: -6px;
+  border: 2px solid white;
+}
+
+input[type="range"]::-moz-range-track {
+  background: rgba(255, 255, 255, 0.2);
+  height: 8px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f2d7f;
+  border: 2px solid white;
+}
+
+/* Select dropdown arrow for Safari */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* Select option styling (for dropdown menu) */
+select option {
+  background: #1a1d2e;
+  color: white;
+}
+
 /* Input styles */
 .genie-input {
   @apply w-full px-4 py-3 rounded-lg bg-gray-300/80 border-none outline-none text-gray-800 text-base;
@@ -107,6 +207,71 @@ body {
 
 .form-input:focus {
   @apply ring-2 ring-accent-teal border-transparent;
+}
+
+/* Dark form input for admin panels */
+.dark-input {
+  @apply w-full px-4 py-2 rounded-lg text-white;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* Safari fixes */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  line-height: 1.5;
+  min-height: 42px;
+}
+
+.dark-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dark-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(79, 45, 127, 0.3);
+}
+
+/* Dark select for admin panels */
+.dark-select {
+  @apply w-full px-4 py-2 rounded-lg text-white cursor-pointer;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  line-height: 1.5;
+  min-height: 42px;
+}
+
+.dark-select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(79, 45, 127, 0.3);
+}
+
+/* Dark button for admin panels */
+.dark-btn {
+  @apply px-4 py-2 rounded-lg text-white cursor-pointer;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s ease;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-btn:active {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 /* Tag badge */
