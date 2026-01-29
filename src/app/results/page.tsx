@@ -217,7 +217,7 @@ export default function ResultsPage() {
               {titlesBody?.resultsTitle}
             </h1>
 
-            {isLoading ? (
+            {isLoading || (!displayedTopResultsHTML && topResultsContent) ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="star-spinner text-gray-600">★</span>
                 <p className="text-gray-600 mt-4">Analyzing top competitors...</p>
@@ -232,7 +232,12 @@ export default function ResultsPage() {
                 ) : (
                   <div dangerouslySetInnerHTML={{ __html: displayedTopResultsHTML }} />
                 )}
-                {isTypingTopResults}
+                {isTypingTopResults && (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <span className="star-spinner text-sm">★</span>
+                    <span className="text-sm">Loading...</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -243,15 +248,29 @@ export default function ResultsPage() {
                   {titlesBody?.intentTitle}
                 </h2>
                 {intentIsHTML ? (
-                  <div className="text-xl font-bold text-gray-800 blueprint-content">
-                    <div dangerouslySetInnerHTML={{ __html: displayedIntentHTML }} />
-                    {isTypingIntentHTML && <span className="inline-block w-2 h-5 bg-gray-800 animate-pulse ml-1">|</span>}
-                  </div>
+                  !displayedIntentHTML ? (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <span className="star-spinner text-sm">★</span>
+                      <span>Analyzing intent...</span>
+                    </div>
+                  ) : (
+                    <div className="text-xl font-bold text-gray-800 blueprint-content">
+                      <div dangerouslySetInnerHTML={{ __html: displayedIntentHTML }} />
+                      {isTypingIntentHTML && <span className="inline-block w-2 h-5 bg-gray-800 animate-pulse ml-1">|</span>}
+                    </div>
+                  )
                 ) : (
-                  <p className="text-xl font-bold text-gray-800 uppercase">
-                    {displayedIntentText}
-                    {isTypingIntentText}
-                  </p>
+                  !displayedIntentText ? (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <span className="star-spinner text-sm">★</span>
+                      <span>Analyzing intent...</span>
+                    </div>
+                  ) : (
+                    <p className="text-xl font-bold text-gray-800 uppercase">
+                      {displayedIntentText}
+                      {isTypingIntentText && <span className="inline-block w-1 h-4 bg-gray-800 animate-pulse ml-1"></span>}
+                    </p>
+                  )
                 )}
               </div>
             )}
@@ -265,22 +284,22 @@ export default function ResultsPage() {
               {titlesBody?.blueprintTitle}
             </h1>
 
-            {!shouldShowBlueprint ? (
+            {!shouldShowBlueprint || (shouldShowBlueprint && blueprint && !displayedBlueprintHTML) ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="star-spinner text-gray-600">★</span>
                 <p className="text-gray-600 mt-4">
-                  {!blueprintReady ? "Generating your blueprint..." : "Waiting for intent analysis..."}
+                  {!blueprintReady ? "Generating your blueprint..." : "Preparing content..."}
                 </p>
               </div>
             ) : displayedBlueprintHTML ? (
               <div>
-                {/* <div className="mb-8 text-gray-800">
-                  <p className="mb-1"><span className="font-bold">Target Keyword:</span> {keyword} {searchData?.location}</p>
-                  <p className="mb-1"><span className="font-bold">Store:</span> {searchData?.storeName || "-"}</p>
-                  <p><span className="font-bold">Location:</span> {searchData?.location}</p>
-                </div> */}
                 <div className="blueprint-content" dangerouslySetInnerHTML={{ __html: displayedBlueprintHTML }} />
-                {isTypingBlueprint}
+                {isTypingBlueprint && (
+                  <div className="flex items-center gap-2 text-gray-500 mt-4">
+                    <span className="star-spinner text-sm">★</span>
+                    <span className="text-sm">Loading...</span>
+                  </div>
+                )}
               </div>
             ) : null}
           </div>
