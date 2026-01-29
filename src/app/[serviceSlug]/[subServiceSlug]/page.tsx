@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header, Footer, Background, FormCard, FormField as FormFieldWrapper, LoadingOverlay, AuthGuard, FormMessage, PageLoading } from "@/components";
-import { TopResult, TitlesBody } from "@/lib/api";
+import { searchStream, TopResult, TitlesBody } from "@/lib/api";
 
 interface DynamicFormField {
   id: string;
@@ -150,79 +150,99 @@ export default function DynamicSubServicePage() {
     setFormError("");
 
     try {
-      const { searchStream } = await import("@/lib/api");
-
-      const dataToStore = {
+      // Prepare the request data
+      const requestData = {
         ...formData,
         spellType: normalizedSlug,
         subServiceId: subService.id,
+        storeName: formData.store || '',
+        location: formData.location || '',
       };
 
+      // Build API form data
       const apiFormData: Record<string, string> = {};
-      Object.entries(dataToStore).forEach(([key, value]) => {
+      Object.entries(requestData).forEach(([key, value]) => {
         if (key !== "spellType" && key !== "subServiceId" && typeof value === "string") {
           apiFormData[key] = value;
         }
       });
 
-      const results: { topResults: TopResult[] | string; topResultsType: "array" | "html"; titlesBody: TitlesBody | null; intent: string; blueprint: string } = { 
+      // Clear previous results
+      localStorage.removeItem("seoai_search_results");
+      
+      // Save request data for results page to continue streaming
+      localStorage.setItem("seoai_search_request", JSON.stringify(requestData));
+
+      // Track results as they come in
+      const results: { 
+        topResults: TopResult[] | string; 
+        topResultsType: "array" | "html"; 
+        titlesBody: TitlesBody | null; 
+        intent: string; 
+        blueprint: string;
+        hasNavigated?: boolean;
+      } = { 
         topResults: [], 
         topResultsType: "array",
         titlesBody: null,
         intent: "", 
-        blueprint: "" 
+        blueprint: "",
+        hasNavigated: false
       };
 
+      let hasNavigated = false;
+
+      // Start streaming - navigate to results when first result arrives
       await searchStream({
-        ...dataToStore,
+        ...requestData,
         formData: apiFormData,
         storeName: formData.store || '',
         location: formData.location || '',
-        spellType: dataToStore.spellType as "high-authority" | "collection" | "product" | "geo-collection" | "geo-product"
+        spellType: requestData.spellType as "high-authority" | "collection" | "product" | "geo-collection" | "geo-product"
       }, {
+        onTitles: (titles: TitlesBody) => {
+          // Titles arrive first - save immediately
+          results.titlesBody = titles;
+          localStorage.setItem("seoai_search_results", JSON.stringify(results));
+        },
         onTopResults: (topResults) => {
-          // Check if it's an array (Google datasource) or string (AI datasource)
           if (Array.isArray(topResults)) {
-            // Array type: store as-is, will be mapped in results page
             results.topResults = topResults;
             results.topResultsType = "array";
           } else if (typeof topResults === "string") {
-            // HTML string type: respect the HTML as it comes from API, only remove markdown code blocks if present
             const cleaned = topResults.replace(/```html|```/gi, "").trim();
             results.topResults = cleaned;
             results.topResultsType = "html";
-          } else {
-            results.topResults = [];
-            results.topResultsType = "array";
+          }
+          
+          // Save and navigate when we get top results (titles should already be set)
+          if (!hasNavigated) {
+            hasNavigated = true;
+            results.hasNavigated = true;
+            localStorage.setItem("seoai_search_results", JSON.stringify(results));
+            startTransition(() => {
+              router.push("/results");
+            });
           }
         },
-        onTitles: (titles: TitlesBody) => {
-          results.titlesBody = titles;
-        },
         onIntent: (intentData) => {
-          // Respect the HTML as it comes from API, only remove markdown code blocks if present
           const cleaned = intentData.replace(/```html|```/gi, "").trim();
           results.intent = cleaned;
+          localStorage.setItem("seoai_search_results", JSON.stringify(results));
         },
         onBlueprint: (blueprintData) => {
-          // Respect the HTML as it comes from API, only remove markdown code blocks if present
           const cleaned = blueprintData.replace(/```html|```/gi, "").trim();
           results.blueprint = cleaned;
+          localStorage.setItem("seoai_search_results", JSON.stringify(results));
         },
         onError: (err) => {
-          setFormError(err);
-          setIsLoading(false);
+          if (!hasNavigated) {
+            setFormError(err);
+            setIsLoading(false);
+          }
         },
       });
 
-      console.log("[Form] Saving to localStorage - titlesBody:", results.titlesBody);
-      localStorage.setItem("seoai_search_data", JSON.stringify(dataToStore));
-      localStorage.setItem("seoai_search_results", JSON.stringify(results));
-      
-      // Use startTransition for smooth navigation
-      startTransition(() => {
-        router.push("/results");
-      });
     } catch {
       setFormError("An error occurred. Please try again.");
       setIsLoading(false);

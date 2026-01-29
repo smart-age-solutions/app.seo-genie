@@ -3,26 +3,25 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { TopResult, TitlesBody } from "@/lib/api";
-// import { SearchData, TopResult, TitlesBody } from "@/lib/api";
 import { AuthGuard, Toast, Background, ServiceNav, UserMenu } from "@/components";
 import { useSession } from "next-auth/react";
 import { useTypewriter, useTypewriterHTML } from "@/hooks/useTypewriter";
 
 export default function ResultsPage() {
-  // const [searchData, setSearchData] = useState<SearchData | null>(null);
   const [topResults, setTopResults] = useState<TopResult[] | string>([]);
   const [topResultsType, setTopResultsType] = useState<"array" | "html">("array");
   const [intent, setIntent] = useState("");
   const [blueprint, setBlueprint] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
   const [intentComplete, setIntentComplete] = useState(false);
   const [blueprintReady, setBlueprintReady] = useState(false);
   const [titlesBody, setTitlesBody] = useState<TitlesBody | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // const [googleUrl, setGoogleUrl] = useState("");
 
   const hasStartedRef = useRef(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if intent contains HTML tags
   const intentIsHTML = useMemo(() => {
@@ -34,7 +33,7 @@ export default function ResultsPage() {
   const { displayedText: displayedIntentText, isTyping: isTypingIntentText } = useTypewriter(
     intentIsHTML ? "" : intent,
     {
-      speed: 3, // readable text speed
+      speed: 12, // readable text speed
       onComplete: () => setIntentComplete(true),
     }
   );
@@ -42,7 +41,7 @@ export default function ResultsPage() {
   const { displayedHTML: displayedIntentHTML, isTyping: isTypingIntentHTML } = useTypewriterHTML(
     intentIsHTML ? intent : "",
     {
-      speed: 10, // HTML content speed
+      speed: 12, // HTML content speed
       onComplete: () => setIntentComplete(true),
     }
   );
@@ -60,15 +59,13 @@ export default function ResultsPage() {
   // Typewriter for blueprint - only start when intent is complete (or if there's no intent)
   const { displayedHTML: displayedBlueprintHTML, isTyping: isTypingBlueprint } = useTypewriterHTML(
     shouldShowBlueprint ? blueprint : "",
-    { speed: 20 } // fast smooth typing for blueprint
+    { speed: 12 } // fast smooth typing for blueprint
   );
 
   // Convert top results to HTML format for typewriter effect (only for array type - Google datasource)
   const topResultsContent = useMemo(() => {
-    if (isLoading) return "";
-    
     // HTML type: use HTML as it comes from API (respect as-is)
-    if (topResultsType === "html" && typeof topResults === "string") {
+    if (topResultsType === "html" && typeof topResults === "string" && topResults) {
       return topResults;
     }
     
@@ -102,72 +99,117 @@ export default function ResultsPage() {
     }
     
     return "";
-  }, [isLoading, topResultsType, topResults]);
+  }, [topResultsType, topResults]);
+  
+  // Check if we're waiting for top results
+  const waitingForTopResults = isLoading && !topResultsContent;
 
   const { displayedHTML: displayedTopResultsHTML, isTyping: isTypingTopResults } = useTypewriterHTML(
     topResultsContent,
-    { speed: 20 } // fast smooth typing for top results
+    { speed: 12 } // fast smooth typing for top results
   );
 
-  // Load results from localStorage on mount - synchronous for instant display
+  // Poll localStorage for updates from the form page's stream
+  useEffect(() => {
+    if (!isPolling) return;
+
+    const pollForUpdates = () => {
+      const storedResults = localStorage.getItem("seoai_search_results");
+      if (!storedResults) return;
+      
+      try {
+        const results = JSON.parse(storedResults) as {
+          topResults: TopResult[] | string;
+          topResultsType?: "array" | "html";
+          intent: string;
+          blueprint: string;
+          titlesBody: TitlesBody | null;
+        };
+        
+        // Update state with new data
+        if (results.titlesBody && !titlesBody) {
+          setTitlesBody(results.titlesBody);
+        }
+        
+        if (results.intent && !intent) {
+          setIntent(results.intent);
+        }
+        
+        if (results.blueprint && !blueprint) {
+          setBlueprint(results.blueprint);
+          setBlueprintReady(true);
+          // Stop polling when blueprint arrives (last item)
+          setIsPolling(false);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    };
+
+    // Poll every 500ms
+    pollingRef.current = setInterval(pollForUpdates, 500);
+    
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [isPolling, titlesBody, intent, blueprint]);
+
+  // Load on mount - read from localStorage and start polling for updates
   useEffect(() => {
     if (hasStartedRef.current) return;
     hasStartedRef.current = true;
 
-    const storedData = localStorage.getItem("seoai_search_data");
     const storedResults = localStorage.getItem("seoai_search_results");
-
-    if (!storedData || !storedResults) {
-      setError("No search results found. Please start a new search.");
-      setIsLoading(false);
-      return;
+    if (storedResults) {
+      try {
+        const results = JSON.parse(storedResults) as {
+          topResults: TopResult[] | string;
+          topResultsType?: "array" | "html";
+          intent: string;
+          blueprint: string;
+          titlesBody: TitlesBody | null;
+          hasNavigated?: boolean;
+        };
+        
+        let resultsType: "array" | "html" = results.topResultsType || "array";
+        if (!results.topResultsType && results.titlesBody?.topResultsDataSource) {
+          resultsType = results.titlesBody.topResultsDataSource === "GOOGLE" ? "array" : "html";
+        } else if (!results.topResultsType) {
+          resultsType = Array.isArray(results.topResults) ? "array" : "html";
+        }
+        
+        // Set initial data
+        setTopResults(results.topResults || (resultsType === "array" ? [] : ""));
+        setTopResultsType(resultsType);
+        setIntent(results.intent || "");
+        setBlueprint(results.blueprint || "");
+        setTitlesBody(results.titlesBody || null);
+        
+        const hasBlueprint = !!(results.blueprint && results.blueprint.trim() !== "");
+        setBlueprintReady(hasBlueprint);
+        
+        if (!results.intent || results.intent.trim() === "") {
+          setIntentComplete(true);
+        }
+        
+        setIsLoading(false);
+        
+        // Start polling if stream is still in progress (no blueprint yet)
+        if (!hasBlueprint) {
+          setIsPolling(true);
+        }
+        
+        return;
+      } catch {
+        // Invalid cached results
+      }
     }
 
-    try {
-      // const data = JSON.parse(storedData) as SearchData;
-      const results = JSON.parse(storedResults) as {
-        topResults: TopResult[] | string;
-        topResultsType?: "array" | "html";
-        intent: string;
-        blueprint: string;
-        titlesBody: TitlesBody | null;
-      };
-      
-      // Set all data immediately - no async needed
-      // setSearchData(data); // Removed - searchData is not used
-      
-      // Determine type based on stored type or datasource
-      let resultsType: "array" | "html" = results.topResultsType || "array";
-      if (!results.topResultsType && results.titlesBody?.topResultsDataSource) {
-        // If datasource is Google, it's array; otherwise it's HTML
-        resultsType = results.titlesBody.topResultsDataSource === "GOOGLE" ? "array" : "html";
-      } else if (!results.topResultsType) {
-        // Fallback: check if topResults is array or string
-        resultsType = Array.isArray(results.topResults) ? "array" : "html";
-      }
-      
-      setTopResults(results.topResults || (resultsType === "array" ? [] : ""));
-      setTopResultsType(resultsType);
-      setIntent(results.intent || "");
-      setBlueprint(results.blueprint || "");
-      // Set blueprintReady based on whether blueprint exists
-      const hasBlueprint = !!(results.blueprint && results.blueprint.trim() !== "");
-      setBlueprintReady(hasBlueprint);
-      setTitlesBody(results.titlesBody || null);
-      
-      // If there's no intent, mark it as complete immediately
-      if (!results.intent || results.intent.trim() === "") {
-        setIntentComplete(true);
-      }
-
-      // const keyword = data.keyword || data.collection || data.product || "";
-      // setGoogleUrl(`https://www.google.com/search?q=${encodeURIComponent(`${keyword} ${data.location || ""}`)}`);
-      
-      setIsLoading(false);
-    } catch {
-      setError("Error loading search results. Please start a new search.");
-      setIsLoading(false);
-    }
+    // No data found
+    setError("No search data found. Please start a new search.");
+    setIsLoading(false);
   }, []);
 
   // const keyword = searchData?.keyword || searchData?.collection || searchData?.product || "";
@@ -212,18 +254,20 @@ export default function ResultsPage() {
               </div>
             </div>
 
-            {/* Top Results Title */}
-            <h1 className="text-4xl font-black text-gray-900 mb-8">
-              {titlesBody?.resultsTitle}
-            </h1>
+            {/* Top Results Section - Show title if available, then loading or content */}
+            {(titlesBody?.resultsTitle || isLoading || topResultsContent) && (
+              <h1 className="text-4xl font-black text-gray-900 mb-8">
+                {titlesBody?.resultsTitle || "Top Results"}
+              </h1>
+            )}
 
-            {isLoading || (!displayedTopResultsHTML && topResultsContent) ? (
+            {isLoading || waitingForTopResults || (!displayedTopResultsHTML && topResultsContent) ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="star-spinner text-gray-600">★</span>
                 <p className="text-gray-600 mt-4">Analyzing top competitors...</p>
               </div>
-            ) : (topResultsType === "array" && Array.isArray(topResults) && topResults.length === 0) || 
-                 (topResultsType === "html" && (!topResults || topResults === "")) ? (
+            ) : !isPolling && !isLoading && ((topResultsType === "array" && Array.isArray(topResults) && topResults.length === 0) || 
+                 (topResultsType === "html" && (!topResults || topResults === ""))) ? (
               <p className="text-gray-600 text-center py-12">No results found. Please try a different search.</p>
             ) : (
               <div className="space-y-8">
@@ -241,13 +285,20 @@ export default function ResultsPage() {
               </div>
             )}
 
-            {/* Intent Section */}
-            {intent && (
+            {/* Intent Section - Show title if available, then loading or content */}
+            {(titlesBody?.intentTitle || intent) && (
               <div className="mt-12">
                 <h2 className="text-4xl font-black text-gray-900 mb-4">
-                  {titlesBody?.intentTitle}
+                  {titlesBody?.intentTitle || "Intent"}
                 </h2>
-                {intentIsHTML ? (
+                
+                {/* Loading state: show spinner if title exists but no intent data yet */}
+                {!intent ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <span className="star-spinner text-gray-600">★</span>
+                    <p className="text-gray-600 mt-4">Analyzing intent...</p>
+                  </div>
+                ) : intentIsHTML ? (
                   !displayedIntentHTML ? (
                     <div className="flex flex-col items-center justify-center py-8">
                       <span className="star-spinner text-gray-600">★</span>
@@ -294,15 +345,18 @@ export default function ResultsPage() {
         {/* Right Column - Blueprint */}
         <div className="w-full lg:w-1/2 results-right min-h-screen print:min-h-0">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-4xl font-black text-gray-900 mb-8">
-              {titlesBody?.blueprintTitle}
-            </h1>
+            {/* Blueprint Section - Show title if available, then loading or content */}
+            {(titlesBody?.blueprintTitle || blueprintReady || isPolling) && (
+              <h1 className="text-4xl font-black text-gray-900 mb-8">
+                {titlesBody?.blueprintTitle || "Blueprint"}
+              </h1>
+            )}
 
-            {!shouldShowBlueprint || (shouldShowBlueprint && blueprint && !displayedBlueprintHTML) ? (
+            {(isPolling && !blueprintReady) || !shouldShowBlueprint || (shouldShowBlueprint && blueprint && !displayedBlueprintHTML) ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="star-spinner text-gray-600">★</span>
                 <p className="text-gray-600 mt-4">
-                  {!blueprintReady ? "Generating your blueprint..." : "Preparing content..."}
+                  {isPolling && !blueprintReady ? "AI is thinking..." : !blueprintReady ? "Generating your blueprint..." : "Preparing content..."}
                 </p>
               </div>
             ) : displayedBlueprintHTML ? (
