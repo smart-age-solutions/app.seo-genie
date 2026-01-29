@@ -249,27 +249,41 @@ export default function ResultsPage() {
                 </h2>
                 {intentIsHTML ? (
                   !displayedIntentHTML ? (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <span className="star-spinner text-sm">★</span>
-                      <span>Analyzing intent...</span>
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <span className="star-spinner text-gray-600">★</span>
+                      <p className="text-gray-600 mt-4">Analyzing intent...</p>
                     </div>
                   ) : (
-                    <div className="text-xl font-bold text-gray-800 blueprint-content">
-                      <div dangerouslySetInnerHTML={{ __html: displayedIntentHTML }} />
-                      {isTypingIntentHTML && <span className="inline-block w-2 h-5 bg-gray-800 animate-pulse ml-1">|</span>}
+                    <div>
+                      <div className="text-xl font-bold text-gray-800 blueprint-content">
+                        <div dangerouslySetInnerHTML={{ __html: displayedIntentHTML }} />
+                      </div>
+                      {isTypingIntentHTML && (
+                        <div className="flex items-center gap-2 text-gray-500 mt-4">
+                          <span className="star-spinner text-sm">★</span>
+                          <span className="text-sm">Loading...</span>
+                        </div>
+                      )}
                     </div>
                   )
                 ) : (
                   !displayedIntentText ? (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <span className="star-spinner text-sm">★</span>
-                      <span>Analyzing intent...</span>
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <span className="star-spinner text-gray-600">★</span>
+                      <p className="text-gray-600 mt-4">Analyzing intent...</p>
                     </div>
                   ) : (
-                    <p className="text-xl font-bold text-gray-800 uppercase">
-                      {displayedIntentText}
-                      {isTypingIntentText && <span className="inline-block w-1 h-4 bg-gray-800 animate-pulse ml-1"></span>}
-                    </p>
+                    <div>
+                      <p className="text-xl font-bold text-gray-800 uppercase">
+                        {displayedIntentText}
+                      </p>
+                      {isTypingIntentText && (
+                        <div className="flex items-center gap-2 text-gray-500 mt-4">
+                          <span className="star-spinner text-sm">★</span>
+                          <span className="text-sm">Loading...</span>
+                        </div>
+                      )}
+                    </div>
                   )
                 )}
               </div>
